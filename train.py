@@ -58,6 +58,7 @@ class CNNModel(chainer.Chain):
         output_channel = hidden_size
         sent_len = args.maxlen
         out_channels = int(args.maxlen*2)
+        out_size_2 = 192
         super().__init__(
             embed=L.EmbedID(vocab_size, out_size, ignore_label=-1),
             # conv1 = L.Convolution2D(sent_len, out_channels, (2, 2)),
@@ -67,17 +68,19 @@ class CNNModel(chainer.Chain):
 
             bn0 = L.BatchNormalization(out_size),
             conv1 = L.ConvolutionND(ndim=1,
-                in_channels=out_size, out_channels=out_size*2, ksize=8, stride=4),
-            bn1 = L.BatchNormalization(out_size*2),
+                in_channels=out_size, out_channels=out_size//4, ksize=2, stride=2, cover_all=True),
+            bn1 = L.BatchNormalization(out_size//4),
             conv2 = L.ConvolutionND(ndim=1,
-                in_channels=out_size*2, out_channels=out_size*3, ksize=4, stride=2),
-            bn2 = L.BatchNormalization(out_size*3),
+                in_channels=out_size//4, out_channels=out_size//2, ksize=2, stride=2, cover_all=True),
+            bn2 = L.BatchNormalization(out_size//2),
+
+            bn3 = L.BatchNormalization(out_size_2),
             conv3 = L.ConvolutionND(ndim=1,
-                in_channels=out_size*3, out_channels=out_size*4, ksize=4, stride=2),
+                in_channels=out_size_2, out_channels=out_size_2//4, ksize=2, stride=2, cover_all=True),
+            bn4 = L.BatchNormalization(out_size_2//4),
             conv4 = L.ConvolutionND(ndim=1,
-                in_channels=out_size*4, out_channels=out_size*5, ksize=4, stride=2),
-            conv5 = L.ConvolutionND(ndim=1,
-                in_channels=out_size*5, out_channels=out_size*6, ksize=4, stride=2),
+                in_channels=out_size_2//4, out_channels=out_size_2//2, ksize=2, stride=2, cover_all=True),
+            bn5 = L.BatchNormalization(out_size//2),
             #rnn1 = L.LSTM(None, 256),
             #fc4 = L.Linear(None, 1024),
             fc5 = L.Linear(None, 512),
@@ -96,6 +99,7 @@ class CNNModel(chainer.Chain):
             print('emb', h.data.shape)
 
         h = F.swapaxes(h, 1, 2)
+        prev_h = h
 
         # Block 1
         if args.bn:
@@ -119,10 +123,50 @@ class CNNModel(chainer.Chain):
         if self.first:
             print('cv2', h.data.shape)
 
-
-        h = F.average_pooling_nd(h, 4)
+        h = F.average_pooling_nd(h, 8)
         if self.first:
             print('av1', h.data.shape)
+
+
+        prev_h = F.dropout(prev_h, self.dropout)
+        prev_h = F.average_pooling_nd(prev_h, 32)
+        #prev_h = F.swapaxes(h, 1, 2)
+        h = F.concat((h, prev_h))
+        prev_h = h
+        if self.first:
+            print('mr1', h.data.shape)
+
+        # Block 1
+        if args.bn:
+            h = self.bn3(h)
+        if args.activation:
+            h = F.relu(h)
+        h = F.dropout(h, self.dropout)
+        h = self.conv3(h)
+        if self.first:
+            print('cv3', h.data.shape)
+
+        # Block 2
+        if args.bn:
+            h = self.bn4(h)
+        if args.activation:
+            h = F.relu(h)
+        h = F.dropout(h, self.dropout)
+        h = self.conv4(h)
+        if self.first:
+            print('cv4', h.data.shape)
+
+
+        prev_h = F.dropout(prev_h, self.dropout)
+        prev_h = F.average_pooling_nd(prev_h, 4)
+        if self.first:
+            print('av2', h.data.shape)
+
+        h = F.concat((h, prev_h))
+        prev_h = h
+        if self.first:
+            print('mr2', h.data.shape)
+
 
         # h = F.average_pooling_nd(F.dropout(h, self.dropout), 4)
         # if self.first:
