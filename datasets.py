@@ -32,7 +32,7 @@ def discover_dataset(path, char_to_id):
 def find_ngrams(string, n):
     return list(zip(*[string[i:] for i in range(n)]))
 
-def read_nli(data_dir, fold, char_to_id, label_to_id, maxlen=128):
+def read_nli(data_dir, fold, char_to_id, label_to_id, maxlen=128, subset=False):
     unk = char_to_id['<UNK>']
     bos = char_to_id['<S>']
     eos = char_to_id['</S>']
@@ -44,7 +44,7 @@ def read_nli(data_dir, fold, char_to_id, label_to_id, maxlen=128):
         for line in in_f:
             fields = line.strip().split(',')
             entry_id, native_lang = fields[0], fields[3]
-            if native_lang not in ['FRE', 'JPN', 'TUR']: continue
+            if subset and native_lang not in ['FRE', 'JPN', 'TUR']: continue
             labels[entry_id] = label_to_id[native_lang]
 
     use_tokenized = False
@@ -112,8 +112,8 @@ class IMDBDataset(dataset_mixin.DatasetMixin):
         return (dataset[idx], np.array(label, dtype=np.int32))
 
 class NLIDataset(SerialIterator):
-    def __init__(self, path, fold, char_to_id, label_to_id, maxlen=128, batch_size=1, repeat=True, shuffle=True):
-        X, y = read_nli(path, fold, char_to_id, label_to_id, maxlen=maxlen)
+    def __init__(self, path, fold, char_to_id, label_to_id, maxlen=128, batch_size=1, repeat=True, shuffle=True, subset=False):
+        X, y = read_nli(path, fold, char_to_id, label_to_id, maxlen=maxlen, subset=subset)
         print('{0} instances in {1}'.format(len(X), fold))
         print('longest sentence is {0} chars'.format(max(map(len, X))))
         self.dataset = list(zip(X, y))#pad_dataset(X, maxlen)
@@ -168,7 +168,7 @@ class NLIDataset(SerialIterator):
         #mlen_word = 16
         # if max(map(len, X)) > mlen:
         #     print(max(map(len, X)))
-        X = np.asarray([sent[:mlen] + [-1]*(mlen-len(sent)) for sent in X], dtype=np.int32)
+        X = np.asarray([sent[:mlen]  + [-1]*(mlen-len(sent)) for sent in X], dtype=np.int32)
         # X_onehot = np.zeros((self.batch_size, 300000), dtype=np.float32)
         # for idx, sent in enumerate(X):
         #     for word_id in sent:

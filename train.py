@@ -70,13 +70,12 @@ class CNNModel(chainer.Chain):
             # fc=L.Linear(None, n_labels)
 
             # Block 1
-            bn0 = L.BatchNormalization(out_size),
+            bn1 = L.BatchNormalization(out_size),
             conv1 = L.ConvolutionND(ndim=1,
                 in_channels=out_size, out_channels=out_size, ksize=2, stride=2, cover_all=True),
-            bn1 = L.BatchNormalization(out_size),
+            bn2 = L.BatchNormalization(out_size),
             conv2 = L.ConvolutionND(ndim=1,
                 in_channels=out_size, out_channels=out_size, ksize=2, stride=2, cover_all=True),
-            bn2 = L.BatchNormalization(out_size),
 
             # Block 2
             bn3 = L.BatchNormalization(out_size*2),
@@ -111,8 +110,9 @@ class CNNModel(chainer.Chain):
             #     in_channels=out_size*16, out_channels=out_size*16, ksize=2, stride=2, cover_all=True),
 
             # Fully connected
-            #fc4 = L.Linear(None, 1024),
-            fc5 = L.Linear(None, 512),
+            #fc3 = L.Linear(None, 2048),
+            fc4 = L.Linear(None, 1024),
+            fc5 = L.Linear(1024, 512),
             fc6 = L.Linear(512, 128),
             fc7 = L.Linear(128, n_labels)
         )
@@ -133,7 +133,7 @@ class CNNModel(chainer.Chain):
 
         #### Block 1 ####
         if args.bn:
-            h = self.bn0(h)
+            h = self.bn1(h)
         if args.activation:
             h = F.relu(h)
         #h = F.dropout(h, self.dropout)
@@ -146,7 +146,7 @@ class CNNModel(chainer.Chain):
         h = F.dropout(h, self.dropout)
 
         if args.bn:
-            h = self.bn1(h)
+            h = self.bn2(h)
         if args.activation:
             h = F.relu(h)
         h = self.conv2(h)
@@ -253,8 +253,10 @@ class CNNModel(chainer.Chain):
         if self.first:
             print('mr4', h.data.shape)
 
+        #h = F.average_pooling_nd(h, 2)
 
-        # #### Block 5 ####
+
+        #### Block 5 ####
         # if args.bn:
         #     h = self.bn9(h)
         # if args.activation:
@@ -288,6 +290,19 @@ class CNNModel(chainer.Chain):
         #### Fully Connected ####
         if self.first:
             print('Hidden has to deal with {0} units as input'.format(h.shape[1]*h.shape[2]))
+
+        # h = F.dropout(h, self.dropout)
+        # h = F.relu(h)
+        # h = self.fc3(h)
+        # if self.first:
+        #     print('fc3', h.data.shape)
+
+        h = F.dropout(h, self.dropout)
+        h = F.relu(h)
+        h = self.fc4(h)
+        if self.first:
+            print('fc4', h.data.shape)
+
         h = F.dropout(h, self.dropout)
         h = F.relu(h)
         h = self.fc5(h)
@@ -389,6 +404,7 @@ def parse_args():
                         help='Dropout ratio between layers')
     parser.add_argument('--activation', action='store_true')
     parser.add_argument('--bn', action='store_true')
+    parser.add_argument('--subset', action='store_true')
     return parser.parse_args()
 
 
@@ -407,8 +423,8 @@ def main():
 
     elif 'nli' in args.dataset:
         print('nli!')
-        train = NLIDataset(args.dataset, 'train', char_to_id, label_to_id, args.maxlen, args.batchsize, repeat=True)
-        test = NLIDataset(args.dataset, 'dev', char_to_id, label_to_id, args.maxlen, args.batchsize, repeat=False, shuffle=False)
+        train = NLIDataset(args.dataset, 'train', char_to_id, label_to_id, args.maxlen, args.batchsize, repeat=True, subset=args.subset)
+        test = NLIDataset(args.dataset, 'dev', char_to_id, label_to_id, args.maxlen, args.batchsize, repeat=False, shuffle=False, subset=args.subset)
 
     vocab_size = len(char_to_id) + 1#max(map(max, train.pos_dataset))
     n_labels = 2 if len(label_to_id) == 0 else len(label_to_id)
