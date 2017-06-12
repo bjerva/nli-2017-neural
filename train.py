@@ -62,8 +62,6 @@ class CNNModel(chainer.Chain):
         output_channel = hidden_size
         sent_len = args.maxlen
         out_channels = int(args.maxlen*2)
-        out_size_2 = 256
-        out_size_3 = 512
         super().__init__(
             embed=L.EmbedID(vocab_size, out_size, ignore_label=-1),
             # conv1 = L.Convolution2D(sent_len, out_channels, (2, 2)),
@@ -81,22 +79,36 @@ class CNNModel(chainer.Chain):
             bn2 = L.BatchNormalization(out_size),
 
             # Block 2
-            bn3 = L.BatchNormalization(out_size_2),
+            bn3 = L.BatchNormalization(out_size*2),
             conv3 = L.ConvolutionND(ndim=1,
-                in_channels=out_size_2, out_channels=out_size_2, ksize=2, stride=2, cover_all=True),
-            bn4 = L.BatchNormalization(out_size_2),
+                in_channels=out_size*2, out_channels=out_size*2, ksize=2, stride=2, cover_all=True),
+            bn4 = L.BatchNormalization(out_size*2),
             conv4 = L.ConvolutionND(ndim=1,
-                in_channels=out_size_2, out_channels=out_size_2, ksize=2, stride=2, cover_all=True),
-
+                in_channels=out_size*2, out_channels=out_size*2, ksize=2, stride=2, cover_all=True),
 
             # Block 3
-            bn5 = L.BatchNormalization(out_size_3),
+            bn5 = L.BatchNormalization(out_size*4),
             conv5 = L.ConvolutionND(ndim=1,
-                in_channels=out_size_3, out_channels=out_size_3, ksize=2, stride=2, cover_all=True),
-            bn6 = L.BatchNormalization(out_size_3),
+                in_channels=out_size*4, out_channels=out_size*4, ksize=2, stride=2, cover_all=True),
+            bn6 = L.BatchNormalization(out_size*4),
             conv6 = L.ConvolutionND(ndim=1,
-                in_channels=out_size_3, out_channels=out_size_3, ksize=2, stride=2, cover_all=True),
+                in_channels=out_size*4, out_channels=out_size*4, ksize=2, stride=2, cover_all=True),
 
+            # Block 4
+            bn7 = L.BatchNormalization(out_size*8),
+            conv7 = L.ConvolutionND(ndim=1,
+                in_channels=out_size*8, out_channels=out_size*8, ksize=2, stride=2, cover_all=True),
+            bn8 = L.BatchNormalization(out_size*8),
+            conv8 = L.ConvolutionND(ndim=1,
+                in_channels=out_size*8, out_channels=out_size*8, ksize=2, stride=2, cover_all=True),
+
+            # Block 5
+            bn9 = L.BatchNormalization(out_size*16),
+            conv9 = L.ConvolutionND(ndim=1,
+                in_channels=out_size*16, out_channels=out_size*16, ksize=2, stride=2, cover_all=True),
+            bn10 = L.BatchNormalization(out_size*16),
+            conv10 = L.ConvolutionND(ndim=1,
+                in_channels=out_size*16, out_channels=out_size*16, ksize=2, stride=2, cover_all=True),
 
             # Fully connected
             #fc4 = L.Linear(None, 1024),
@@ -146,9 +158,7 @@ class CNNModel(chainer.Chain):
             print('av1', h.data.shape)
 
 
-        #prev_h = F.dropout(prev_h, self.dropout)
         prev_h = F.average_pooling_nd(prev_h, 8)
-        #prev_h = F.swapaxes(h, 1, 2)
         h = F.concat((h, prev_h))
         prev_h = h
         if self.first:
@@ -174,7 +184,6 @@ class CNNModel(chainer.Chain):
             print('cv4', h.data.shape)
 
 
-        #prev_h = F.dropout(prev_h, self.dropout)
         prev_h = F.average_pooling_nd(prev_h, 4)
         if self.first:
             print('av2', prev_h.data.shape)
@@ -185,64 +194,98 @@ class CNNModel(chainer.Chain):
             print('rn2', h.data.shape)
 
 
-        # #### Block 3 ####
-        # if args.bn:
-        #     h = self.bn5(h)
-        # if args.activation:
-        #     h = F.relu(h)
-        # h = F.dropout(h, self.dropout)
-        # h = self.conv5(h)
-        # if self.first:
-        #     print('cv5', h.data.shape)
-        #
-        # if args.bn:
-        #     h = self.bn6(h)
-        # if args.activation:
-        #     h = F.relu(h)
-        # h = F.dropout(h, self.dropout)
-        # h = self.conv6(h)
-        # if self.first:
-        #     print('cv6', h.data.shape)
-        #
-        #
-        # prev_h = F.dropout(prev_h, self.dropout)
-        # prev_h = F.average_pooling_nd(prev_h, 4)
-        # if self.first:
-        #     print('av3', prev_h.data.shape)
-        #
-        # h = F.concat((h, prev_h))
-        # prev_h = h
-        # if self.first:
-        #     print('mr3', h.data.shape)
+        #### Block 3 ####
+        if args.bn:
+            h = self.bn5(h)
+        if args.activation:
+            h = F.relu(h)
+        h = self.conv5(h)
+        if self.first:
+            print('cv5', h.data.shape)
+
+        h = F.dropout(h, self.dropout)
+
+        if args.bn:
+            h = self.bn6(h)
+        if args.activation:
+            h = F.relu(h)
+        h = self.conv6(h)
+        if self.first:
+            print('cv6', h.data.shape)
 
 
-        # h = F.average_pooling_nd(F.dropout(h, self.dropout), 4)
-        # if self.first:
-        #     print('av2', h.data.shape)
-        # #
-        # # if self.first:
-        # #     print(h.data.shape)
-        # h = self.conv4(h)
-        # if self.first:
-        #     print(h.data.shape)
-        # h = self.conv5(h)
-        # if self.first:
-        #     print(h.data.shape)
-        # h = F.swapaxes(h, 1, 2)
-        # h = F.average_pooling_nd(h, 2)
-        # h = F.swapaxes(h, 1, 2)
-        # if self.first:
-        #     print(h.data.shape)
+        prev_h = F.average_pooling_nd(prev_h, 4)
+        if self.first:
+            print('av3', prev_h.data.shape)
 
-        #h = self.rnn1(h)
-        # # h = F.max_pooling_nd(h, 4, cover_all=True)
-        # if self.first:
-        #     print('after lstm')
-        #     print(h.data.shape)
-        # h = self.fc4(F.dropout(h, self.dropout, self.train))
-        # if self.first:
-            # print(h.data.shape)
+        h = F.concat((h, prev_h))
+        prev_h = h
+        if self.first:
+            print('mr3', h.data.shape)
 
+
+        #### Block 4 ####
+        if args.bn:
+            h = self.bn7(h)
+        if args.activation:
+            h = F.relu(h)
+        h = self.conv7(h)
+        if self.first:
+            print('cv7', h.data.shape)
+
+        h = F.dropout(h, self.dropout)
+
+        if args.bn:
+            h = self.bn8(h)
+        if args.activation:
+            h = F.relu(h)
+        h = self.conv8(h)
+        if self.first:
+            print('cv8', h.data.shape)
+
+
+        prev_h = F.average_pooling_nd(prev_h, 4)
+        if self.first:
+            print('av4', prev_h.data.shape)
+
+        h = F.concat((h, prev_h))
+        prev_h = h
+        if self.first:
+            print('mr4', h.data.shape)
+
+
+        #### Block 5 ####
+        if args.bn:
+            h = self.bn9(h)
+        if args.activation:
+            h = F.relu(h)
+        h = self.conv9(h)
+        if self.first:
+            print('cv9', h.data.shape)
+
+
+        h = F.dropout(h, self.dropout)
+
+        if args.bn:
+            h = self.bn10(h)
+        if args.activation:
+            h = F.relu(h)
+        h = self.conv10(h)
+        if self.first:
+            print('cv10', h.data.shape)
+
+
+        prev_h = F.average_pooling_nd(prev_h, 4)
+        if self.first:
+            print('av4', prev_h.data.shape)
+
+        h = F.concat((h, prev_h))
+        prev_h = h
+        if self.first:
+            print('mr4', h.data.shape)
+
+
+        #### Fully Connected ####
         if self.first:
             print('Hidden has to deal with {0} units as input'.format(h.shape[1]*h.shape[2]))
         h = F.dropout(h, self.dropout)
