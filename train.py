@@ -254,35 +254,35 @@ class CNNModel(chainer.Chain):
             print('mr4', h.data.shape)
 
 
-        #### Block 5 ####
-        if args.bn:
-            h = self.bn9(h)
-        if args.activation:
-            h = F.relu(h)
-        h = self.conv9(h)
-        if self.first:
-            print('cv9', h.data.shape)
-
-
-        h = F.dropout(h, self.dropout)
-
-        if args.bn:
-            h = self.bn10(h)
-        if args.activation:
-            h = F.relu(h)
-        h = self.conv10(h)
-        if self.first:
-            print('cv10', h.data.shape)
-
-
-        prev_h = F.average_pooling_nd(prev_h, 4)
-        if self.first:
-            print('av4', prev_h.data.shape)
-
-        h = F.concat((h, prev_h))
-        prev_h = h
-        if self.first:
-            print('mr4', h.data.shape)
+        # #### Block 5 ####
+        # if args.bn:
+        #     h = self.bn9(h)
+        # if args.activation:
+        #     h = F.relu(h)
+        # h = self.conv9(h)
+        # if self.first:
+        #     print('cv9', h.data.shape)
+        #
+        #
+        # h = F.dropout(h, self.dropout)
+        #
+        # if args.bn:
+        #     h = self.bn10(h)
+        # if args.activation:
+        #     h = F.relu(h)
+        # h = self.conv10(h)
+        # if self.first:
+        #     print('cv10', h.data.shape)
+        #
+        #
+        # prev_h = F.average_pooling_nd(prev_h, 4)
+        # if self.first:
+        #     print('av4', prev_h.data.shape)
+        #
+        # h = F.concat((h, prev_h))
+        # prev_h = h
+        # if self.first:
+        #     print('mr4', h.data.shape)
 
 
         #### Fully Connected ####
@@ -301,21 +301,12 @@ class CNNModel(chainer.Chain):
            print('fc6', h.data.shape)
 
         h = F.relu(h)
+        h = F.dropout(h, self.dropout)
+        h = self.fc7(h)
         if self.first:
-            #import pdb; pdb.set_trace()
             self.first = False
-        #import pdb; pdb.set_trace()
-        #h = self.l1(F.dropout(F.average_pooling_2d(h, 2), self.dropout, self.train))
-        return self.fc7(F.dropout(h, self.dropout))
+        return h
 
-        # import pdb; pdb.set_trace()
-        # #h = F.vstack(hs).reshape(x.shape[0], -1, 64)#.shape#F.hstack(hs)
-        # #import pdb; pdb.set_trace()
-        # h = F.dropout(self.layer1(h), self.dropout, self.train)
-        # h = F.dropout(self.layer2(h), self.dropout, self.train)
-        # h = F.dropout(self.layer3(h), self.dropout, self.train)
-        # h = F.dropout(self.layer4(h), self.dropout, self.train)
-        # return self.fc(F.dropout(h, self.dropout, self.train))
 
 class FFNNModel(chainer.Chain):
     def __init__(self, vocab_size, n_labels, hidden_size, dropout):
