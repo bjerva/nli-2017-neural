@@ -8,48 +8,9 @@ import chainer.functions as F
 from chainer import training
 from chainer.training import extensions
 
-#from models.qrnn import QRNNLayer
 from datasets import IMDBDataset, NLIDataset
-#import util#.util as util
 
 from collections import defaultdict
-
-
-class QRNNModel(chainer.Chain):
-    def __init__(self, vocab_size, n_labels, out_size, hidden_size, dropout):
-        super().__init__(
-            embed = L.EmbedID(vocab_size, out_size, ignore_label=-1),
-            char_lstm=L.LSTM(out_size, hidden_size//2),
-            layer1=QRNNLayer(hidden_size//2, hidden_size, kernel_size=2),
-            layer2=QRNNLayer(hidden_size, hidden_size, kernel_size=2),
-            layer3=QRNNLayer(hidden_size, hidden_size),
-            layer4=QRNNLayer(hidden_size, hidden_size),
-            fc=L.Linear(None, n_labels)
-        )
-        self.dropout = dropout
-        self.train = True
-
-    def __call__(self, x):
-        hs = []
-        for sent in x:
-            word_reps = []
-            for word in sent:
-                h = self.embed(word)
-                self.char_lstm.reset_state()
-                h = F.dropout(self.char_lstm(h), self.dropout, self.train)
-                word_reps.append(h[-1])
-
-            hs.append(F.vstack(word_reps))
-
-        #import pdb; pdb.set_trace()
-        h = F.vstack(hs).reshape(x.shape[0], -1, 64)#.shape#F.hstack(hs)
-        #import pdb; pdb.set_trace()
-        h = F.dropout(self.layer1(h), self.dropout, self.train)
-        h = F.dropout(self.layer2(h), self.dropout, self.train)
-        h = F.dropout(self.layer3(h), self.dropout, self.train)
-        h = F.dropout(self.layer4(h), self.dropout, self.train)
-        return self.fc(F.dropout(h, self.dropout, self.train))
-
 
 class RNNModel(chainer.Chain):
     def __init__(self, vocab_size, n_labels, out_size, hidden_size, dropout):
@@ -106,11 +67,11 @@ class CNNModel(chainer.Chain):
 
             bn0 = L.BatchNormalization(out_size),
             conv1 = L.ConvolutionND(ndim=1,
-                in_channels=out_size, out_channels=out_size*2, ksize=4, stride=4, cover_all=True),
+                in_channels=out_size, out_channels=out_size*2, ksize=8, stride=4),
             bn1 = L.BatchNormalization(out_size*2),
             conv2 = L.ConvolutionND(ndim=1,
-                in_channels=out_size*2, out_channels=1024, ksize=4, stride=4, cover_all=True),
-            bn2 = L.BatchNormalization(1024),
+                in_channels=out_size*2, out_channels=out_size*3, ksize=4, stride=2),
+            bn2 = L.BatchNormalization(out_size*3),
             conv3 = L.ConvolutionND(ndim=1,
                 in_channels=out_size*3, out_channels=out_size*4, ksize=4, stride=2),
             conv4 = L.ConvolutionND(ndim=1,
@@ -134,11 +95,7 @@ class CNNModel(chainer.Chain):
         if self.first:
             print('emb', h.data.shape)
 
-
-
         h = F.swapaxes(h, 1, 2)
-        prev_h = h
-
 
         # Block 1
         if args.bn:
@@ -163,17 +120,9 @@ class CNNModel(chainer.Chain):
             print('cv2', h.data.shape)
 
 
-        h = F.average_pooling_nd(h, 2)
+        h = F.average_pooling_nd(h, 4)
         if self.first:
             print('av1', h.data.shape)
-
-        # prev_h = F.average_pooling_nd(prev_h, 4)
-        # prev_h = F.swapaxes(prev_h, 1, 2)
-        # if self.first:
-        #     print('av2', prev_h.data.shape)
-        # h = F.concat((prev_h, h)) # Residual yo
-        # if self.first:
-        #     print('mc1', h.data.shape)
 
         # h = F.average_pooling_nd(F.dropout(h, self.dropout), 4)
         # if self.first:
