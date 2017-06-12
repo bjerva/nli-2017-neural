@@ -103,12 +103,12 @@ class CNNModel(chainer.Chain):
                 in_channels=out_size*8, out_channels=out_size*8, ksize=2, stride=2, cover_all=True),
 
             # Block 5
-            bn9 = L.BatchNormalization(out_size*16),
-            conv9 = L.ConvolutionND(ndim=1,
-                in_channels=out_size*16, out_channels=out_size*16, ksize=2, stride=2, cover_all=True),
-            bn10 = L.BatchNormalization(out_size*16),
-            conv10 = L.ConvolutionND(ndim=1,
-                in_channels=out_size*16, out_channels=out_size*16, ksize=2, stride=2, cover_all=True),
+            # bn9 = L.BatchNormalization(out_size*16),
+            # conv9 = L.ConvolutionND(ndim=1,
+            #     in_channels=out_size*16, out_channels=out_size*16, ksize=2, stride=2, cover_all=True),
+            # bn10 = L.BatchNormalization(out_size*16),
+            # conv10 = L.ConvolutionND(ndim=1,
+            #     in_channels=out_size*16, out_channels=out_size*16, ksize=2, stride=2, cover_all=True),
 
             # Fully connected
             #fc4 = L.Linear(None, 1024),
