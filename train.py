@@ -58,8 +58,7 @@ class RNNModel(chainer.Chain):
         return self.fc(h)
 
 class CNNModel(chainer.Chain):
-    def __init__(self, vocab_size, n_labels, out_size, hidden_size, dropout):
-        output_channel = hidden_size
+    def __init__(self, vocab_size, n_labels, out_size, dropout):
         sent_len = args.maxlen
         out_channels = int(args.maxlen*2)
         super().__init__(
@@ -72,10 +71,16 @@ class CNNModel(chainer.Chain):
             # Block 1
             bn1 = L.BatchNormalization(out_size),
             conv1 = L.ConvolutionND(ndim=1,
-                in_channels=out_size, out_channels=out_size, ksize=2, stride=2, cover_all=True),
+                in_channels=out_size, out_channels=out_size, ksize=3, stride=2, cover_all=True),
             bn2 = L.BatchNormalization(out_size),
             conv2 = L.ConvolutionND(ndim=1,
                 in_channels=out_size, out_channels=out_size, ksize=2, stride=2, cover_all=True),
+
+            # Block 1 b
+            # bn1_b = L.BatchNormalization(out_size),
+            # conv1_b = L.ConvolutionND(ndim=1,
+            #     in_channels=out_size, out_channels=out_size, ksize=3, stride=2, cover_all=True),
+            # bn2_b = L.BatchNormalization(out_size),
 
             # Block 2
             bn3 = L.BatchNormalization(out_size*2),
@@ -109,8 +114,8 @@ class CNNModel(chainer.Chain):
             # conv10 = L.ConvolutionND(ndim=1,
             #     in_channels=out_size*16, out_channels=out_size*16, ksize=2, stride=2, cover_all=True),
 
-            fcb1 = L.Linear(None, 256),
-            fcb2 = L.Linear(256, 128),
+            # fcb1 = L.Linear(None, 256),
+            # fcb2 = L.Linear(256, 128),
             # Fully connected
             #fc3 = L.Linear(None, 2048),
             fc4 = L.Linear(None, 1024),
@@ -176,6 +181,34 @@ class CNNModel(chainer.Chain):
         h = F.average_pooling_nd(h, 2)
         if self.first:
             print('av1', h.data.shape)
+
+        # #### Block 1b ####
+        # if args.bn:
+        #     h_b = self.bn1_b(prev_h)
+        # if args.activation:
+        #     h_b = F.relu(h_b)
+        # h_b = self.conv1_b(h_b)
+        # if self.first:
+        #     print('cv1b', h_b.data.shape)
+        #
+        # h_b = F.dropout(h_b, self.dropout)
+        # if args.bn:
+        #     h_b = self.bn2_b(h_b)
+        # if args.activation:
+        #     h_b = F.relu(h_b)
+        # h_b = F.average_pooling_nd(h_b, 4)
+        # if self.first:
+        #     print('av1b', h_b.data.shape)
+        #
+        # h = F.concat((h, h_b))
+        # if self.first:
+        #     print('mrb', h.data.shape)
+        #     #h = F.average_pooling_nd(h, 2)
+        # h = F.swapaxes(h, 1, 2)
+        # h = F.average_pooling_nd(h, 2)
+        # h = F.swapaxes(h, 1, 2)
+        # if self.first:
+        #     print('avb', h.data.shape)
 
 
         prev_h = F.average_pooling_nd(prev_h, 8)
@@ -426,7 +459,7 @@ def parse_args():
                         help='Dropout ratio between layers')
     parser.add_argument('--activation', action='store_true')
     parser.add_argument('--bn', action='store_true')
-    parser.add_argument('--subset', action='store_true')
+    parser.add_argument('--subset', type=int, default=0)
     parser.add_argument('--use_bow', action='store_true')
     return parser.parse_args()
 
@@ -461,7 +494,7 @@ def main():
     #    vocab_size, n_labels, args.out_size, args.hidden_size, args.dropout))
 
     model = L.Classifier(CNNModel(
-        vocab_size, n_labels, args.out_size, args.hidden_size, args.dropout))
+        vocab_size, n_labels, args.out_size, args.dropout))
 
     # model = L.Classifier(FFNNModel(
     #     vocab_size, n_labels,args.hidden_size, args.dropout))
