@@ -44,7 +44,8 @@ def read_nli(data_dir, fold, char_to_id, label_to_id, maxlen=128, subset=False):
         for line in in_f:
             fields = line.strip().split(',')
             entry_id, native_lang = fields[0], fields[3]
-            if subset and native_lang not in ['FRE', 'JPN', 'TUR']: continue
+            if subset == 1 and native_lang not in ['FRE', 'JPN', 'TUR']: continue
+            if subset == 2 and native_lang not in ['TEL', 'HIN']: continue
             labels[entry_id] = label_to_id[native_lang]
 
     use_tokenized = False
@@ -59,7 +60,7 @@ def read_nli(data_dir, fold, char_to_id, label_to_id, maxlen=128, subset=False):
                 #char_rep = [[bos] + [char_to_id[char] for char in word] + [eos] for line in in_f for word in line.split()]
                 #for line in in_f:
                 #char_rep = [bos] + [char_to_id[ngram] for line in in_f for ngram in find_ngrams(line, 4)+find_ngrams(line, 3)+find_ngrams(line, 2)+find_ngrams(line, 1)] + [eos]
-                char_rep = [bos] + [char_to_id[ngram] for line in in_f for ngram in find_ngrams(line, 2)] + [eos]
+                char_rep = [bos] + [char_to_id[ngram] for line in in_f for ngram in find_ngrams(line, 4)] + [eos]
                 # char_rep = []
                 # for line in in_f:
                 #     for n in range(6):
@@ -172,12 +173,12 @@ class NLIDataset(SerialIterator):
 
         X = np.asarray([sent[:mlen]  + [-1]*(mlen-len(sent)) for sent in X], dtype=np.int32)
         if self.use_bow:
-            X_onehot = np.zeros((X.shape[0], 2800), dtype=np.float32)
+            X_onehot = np.zeros((X.shape[0], 18500), dtype=np.float32)
             for idx, sent in enumerate(X):
                 for word_id in sent:
                     if word_id == -1:
                         break
-                    X_onehot[idx, int(word_id)] += 1
+                    X_onehot[idx, word_id] += 1
 
             X = np.asarray(X, dtype=np.float32)
             X = np.hstack([X, X_onehot])
