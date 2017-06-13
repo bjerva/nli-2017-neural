@@ -109,19 +109,39 @@ class CNNModel(chainer.Chain):
             # conv10 = L.ConvolutionND(ndim=1,
             #     in_channels=out_size*16, out_channels=out_size*16, ksize=2, stride=2, cover_all=True),
 
+            fcb1 = L.Linear(None, 256),
+            fcb2 = L.Linear(256, 128),
             # Fully connected
             #fc3 = L.Linear(None, 2048),
             fc4 = L.Linear(None, 1024),
             fc5 = L.Linear(1024, 512),
             fc6 = L.Linear(512, 128),
-            fc7 = L.Linear(128, n_labels)
+            fc7 = L.Linear(None, n_labels),
         )
         self.dropout = dropout
         self.train = True
         self.first = True
 
+    def call_bow(self, x):
+        h = F.dropout(x, self.dropout)
+        h = self.fcb1(h)
+        if self.first:
+            print('\tfcb1', h.data.shape)
+        h = F.dropout(h, self.dropout)
+        h = F.relu(h)
+        h = self.fcb2(h)
+        if self.first:
+            print('\tfcb2', h.data.shape)
+        h = F.dropout(h, self.dropout)
+        h = F.relu(h)
+
+        return h
+
     def __call__(self, x):
-        #self.rnn1.reset_state()
+        if args.use_bow:
+            x_bow = x[:,4096:]
+            x = x[:,:4096]
+            x = F.cast(x, np.int32)
 
         h = self.embed(x)
         if self.first:
@@ -313,12 +333,19 @@ class CNNModel(chainer.Chain):
         h = F.relu(h)
         h = self.fc6(h)
         if self.first:
-           print('fc6', h.data.shape)
+            print('fc6', h.data.shape)
+
+        if args.use_bow:
+            h_bows = self.call_bow(x_bow)
+            h = F.concat((h, h_bows))
+            if self.first:
+                print('cnc', h.data.shape)
 
         h = F.relu(h)
         h = F.dropout(h, self.dropout)
         h = self.fc7(h)
         if self.first:
+            print('out', h.data.shape)
             self.first = False
         return h
 
@@ -357,12 +384,7 @@ class FFNNModel(chainer.Chain):
         #     #import pdb; pdb.set_trace()
         #     self.first = False
         # return self.fc7(F.dropout(h, self.dropout, self.train))
-# epoch       main/loss   validation/main/loss  main/accuracy  validation/main/accuracy
-# 1           1.26909     0.827249              0.722          0.683333
-# 2           0.628819    0.570169              0.835          0.82
-# 3           0.304336    0.545898              0.903667       0.866667
-# 4           0.382191    1.22191               0.902          0.726667
-# 5           0.205926    0.700033              0.935667       0.843333
+
 
 class TestModeEvaluator(extensions.Evaluator):
 
@@ -405,6 +427,7 @@ def parse_args():
     parser.add_argument('--activation', action='store_true')
     parser.add_argument('--bn', action='store_true')
     parser.add_argument('--subset', action='store_true')
+    parser.add_argument('--use_bow', action='store_true')
     return parser.parse_args()
 
 
@@ -423,8 +446,8 @@ def main():
 
     elif 'nli' in args.dataset:
         print('nli!')
-        train = NLIDataset(args.dataset, 'train', char_to_id, label_to_id, args.maxlen, args.batchsize, repeat=True, subset=args.subset)
-        test = NLIDataset(args.dataset, 'dev', char_to_id, label_to_id, args.maxlen, args.batchsize, repeat=False, shuffle=False, subset=args.subset)
+        train = NLIDataset(args.dataset, 'train', char_to_id, label_to_id, args.maxlen, args.batchsize, repeat=True, subset=args.subset, use_bow=args.use_bow)
+        test = NLIDataset(args.dataset, 'dev', char_to_id, label_to_id, args.maxlen, args.batchsize, repeat=False, shuffle=False, subset=args.subset, use_bow=args.use_bow)
 
     vocab_size = len(char_to_id) + 1#max(map(max, train.pos_dataset))
     n_labels = 2 if len(label_to_id) == 0 else len(label_to_id)

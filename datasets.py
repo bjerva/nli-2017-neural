@@ -112,12 +112,13 @@ class IMDBDataset(dataset_mixin.DatasetMixin):
         return (dataset[idx], np.array(label, dtype=np.int32))
 
 class NLIDataset(SerialIterator):
-    def __init__(self, path, fold, char_to_id, label_to_id, maxlen=128, batch_size=1, repeat=True, shuffle=True, subset=False):
+    def __init__(self, path, fold, char_to_id, label_to_id, maxlen=128, batch_size=1, repeat=True, shuffle=True, subset=False, use_bow=False):
         X, y = read_nli(path, fold, char_to_id, label_to_id, maxlen=maxlen, subset=subset)
         print('{0} instances in {1}'.format(len(X), fold))
         print('longest sentence is {0} chars'.format(max(map(len, X))))
         self.dataset = list(zip(X, y))#pad_dataset(X, maxlen)
         self.maxlen = maxlen
+        self.use_bow = use_bow
         super(NLIDataset, self).__init__(
             self.dataset, batch_size, repeat, shuffle)
 
@@ -168,11 +169,18 @@ class NLIDataset(SerialIterator):
         #mlen_word = 16
         # if max(map(len, X)) > mlen:
         #     print(max(map(len, X)))
+
         X = np.asarray([sent[:mlen]  + [-1]*(mlen-len(sent)) for sent in X], dtype=np.int32)
-        # X_onehot = np.zeros((self.batch_size, 300000), dtype=np.float32)
-        # for idx, sent in enumerate(X):
-        #     for word_id in sent:
-        #         X_onehot[idx, word_id] += 1
+        if self.use_bow:
+            X_onehot = np.zeros((X.shape[0], 2800), dtype=np.float32)
+            for idx, sent in enumerate(X):
+                for word_id in sent:
+                    if word_id == -1:
+                        break
+                    X_onehot[idx, int(word_id)] += 1
+
+            X = np.asarray(X, dtype=np.float32)
+            X = np.hstack([X, X_onehot])
         #
         # X = X_onehot
         # X = [[word[:mlen_word] + [-1]*(mlen_word-len(word)) for word in sent] for sent in X]
