@@ -60,7 +60,11 @@ def read_nli(data_dir, fold, char_to_id, label_to_id, maxlen=128, subset=False):
                 #char_rep = [[bos] + [char_to_id[char] for char in word] + [eos] for line in in_f for word in line.split()]
                 #for line in in_f:
                 #char_rep = [bos] + [char_to_id[ngram] for line in in_f for ngram in find_ngrams(line, 4)+find_ngrams(line, 3)+find_ngrams(line, 2)+find_ngrams(line, 1)] + [eos]
-                char_rep = [bos] + [char_to_id[ngram] for line in in_f for ngram in find_ngrams(line, 4)] + [eos]
+                lines = in_f.readlines()
+                char_rep = []
+                char_rep.append([bos] + [char_to_id[ngram] for line in lines for ngram in find_ngrams(line, 3)] + [eos])
+                char_rep.append([bos] + [char_to_id[ngram] for line in lines for ngram in find_ngrams(line, 4)] + [eos])
+
                 # char_rep = []
                 # for line in in_f:
                 #     for n in range(6):
@@ -116,7 +120,7 @@ class NLIDataset(SerialIterator):
     def __init__(self, path, fold, char_to_id, label_to_id, maxlen=128, batch_size=1, repeat=True, shuffle=True, subset=False, use_bow=False):
         X, y = read_nli(path, fold, char_to_id, label_to_id, maxlen=maxlen, subset=subset)
         print('{0} instances in {1}'.format(len(X), fold))
-        print('longest sentence is {0} chars'.format(max(map(len, X))))
+        #print('longest sentence is {0} chars'.format(max(map(len, X))))
         self.dataset = list(zip(X, y))#pad_dataset(X, maxlen)
         self.maxlen = maxlen
         self.use_bow = use_bow
@@ -171,9 +175,11 @@ class NLIDataset(SerialIterator):
         # if max(map(len, X)) > mlen:
         #     print(max(map(len, X)))
 
-        X = np.asarray([sent[:mlen]  + [-1]*(mlen-len(sent)) for sent in X], dtype=np.int32)
+        X_trigram  = np.asarray([sent[0][:mlen]  + [-1]*(mlen-len(sent[0])) for sent in X], dtype=np.int32)
+        X_fourgram = np.asarray([sent[1][:mlen]  + [-1]*(mlen-len(sent[1])) for sent in X], dtype=np.int32)
+        X = np.hstack([X_trigram, X_fourgram])
         if self.use_bow:
-            X_onehot = np.zeros((X.shape[0], 18500), dtype=np.float32)
+            X_onehot = np.zeros((X.shape[0], 140000), dtype=np.float32)
             for idx, sent in enumerate(X):
                 for word_id in sent:
                     if word_id == -1:

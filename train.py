@@ -63,10 +63,6 @@ class CNNModel(chainer.Chain):
         out_channels = int(args.maxlen*2)
         super().__init__(
             embed=L.EmbedID(vocab_size, out_size, ignore_label=-1),
-            # conv1 = L.Convolution2D(sent_len, out_channels, (2, 2)),
-            # conv2 = L.Convolution2D(out_channels, out_channels*2, (2, 2)),
-            # l1    = L.Linear(480, hidden_size),
-            # fc=L.Linear(None, n_labels)
 
             # Block 1
             bn1 = L.BatchNormalization(out_size),
@@ -75,12 +71,6 @@ class CNNModel(chainer.Chain):
             bn2 = L.BatchNormalization(out_size),
             conv2 = L.ConvolutionND(ndim=1,
                 in_channels=out_size, out_channels=out_size, ksize=2, stride=2, cover_all=True),
-
-            # Block 1 b
-            # bn1_b = L.BatchNormalization(out_size),
-            # conv1_b = L.ConvolutionND(ndim=1,
-            #     in_channels=out_size, out_channels=out_size, ksize=3, stride=2, cover_all=True),
-            # bn2_b = L.BatchNormalization(out_size),
 
             # Block 2
             bn3 = L.BatchNormalization(out_size*2),
@@ -106,21 +96,47 @@ class CNNModel(chainer.Chain):
             conv8 = L.ConvolutionND(ndim=1,
                 in_channels=out_size*8, out_channels=out_size*8, ksize=2, stride=2, cover_all=True),
 
-            # Block 5
-            # bn9 = L.BatchNormalization(out_size*16),
-            # conv9 = L.ConvolutionND(ndim=1,
-            #     in_channels=out_size*16, out_channels=out_size*16, ksize=2, stride=2, cover_all=True),
-            # bn10 = L.BatchNormalization(out_size*16),
-            # conv10 = L.ConvolutionND(ndim=1,
-            #     in_channels=out_size*16, out_channels=out_size*16, ksize=2, stride=2, cover_all=True),
+            # Block 1
+            bn1_b = L.BatchNormalization(out_size),
+            conv1_b = L.ConvolutionND(ndim=1,
+                in_channels=out_size, out_channels=out_size, ksize=3, stride=2, cover_all=True),
+            bn2_b = L.BatchNormalization(out_size),
+            conv2_b = L.ConvolutionND(ndim=1,
+                in_channels=out_size, out_channels=out_size, ksize=2, stride=2, cover_all=True),
 
-            # fcb1 = L.Linear(None, 256),
-            # fcb2 = L.Linear(256, 128),
+            # Block 2
+            bn3_b = L.BatchNormalization(out_size*2),
+            conv3_b = L.ConvolutionND(ndim=1,
+                in_channels=out_size*2, out_channels=out_size*2, ksize=2, stride=2, cover_all=True),
+            bn4_b = L.BatchNormalization(out_size*2),
+            conv4_b = L.ConvolutionND(ndim=1,
+                in_channels=out_size*2, out_channels=out_size*2, ksize=2, stride=2, cover_all=True),
+
+            # Block 3
+            bn5_b = L.BatchNormalization(out_size*4),
+            conv5_b = L.ConvolutionND(ndim=1,
+                in_channels=out_size*4, out_channels=out_size*4, ksize=2, stride=2, cover_all=True),
+            bn6_b = L.BatchNormalization(out_size*4),
+            conv6_b = L.ConvolutionND(ndim=1,
+                in_channels=out_size*4, out_channels=out_size*4, ksize=2, stride=2, cover_all=True),
+
+            # Block 4
+            bn7_b = L.BatchNormalization(out_size*8),
+            conv7_b = L.ConvolutionND(ndim=1,
+                in_channels=out_size*8, out_channels=out_size*8, ksize=2, stride=2, cover_all=True),
+            bn8_b = L.BatchNormalization(out_size*8),
+            conv8_b = L.ConvolutionND(ndim=1,
+                in_channels=out_size*8, out_channels=out_size*8, ksize=2, stride=2, cover_all=True),
+
+            # fcb1 = L.Linear(None, 1024),
+            # fcb2 = L.Linear(1024, 128),
             # Fully connected
             #fc3 = L.Linear(None, 2048),
-            fc4 = L.Linear(None, 1024),
-            fc5 = L.Linear(1024, 512),
-            fc6 = L.Linear(512, 128),
+            fctri  = L.Linear(None, 2048),
+            fcfour = L.Linear(None, 2048),
+            #fc4 = L.Linear(None, 1024),
+            fc5 = L.Linear(None, 1024),
+            fc6 = L.Linear(None, 256),
             fc7 = L.Linear(None, n_labels),
         )
         self.dropout = dropout
@@ -132,7 +148,7 @@ class CNNModel(chainer.Chain):
         h = self.fcb1(h)
         if self.first:
             print('\tfcb1', h.data.shape)
-        h = F.dropout(h, self.dropout)
+        h = F.dropout(h, 0.8)
         h = F.relu(h)
         h = self.fcb2(h)
         if self.first:
@@ -142,18 +158,7 @@ class CNNModel(chainer.Chain):
 
         return h
 
-    def __call__(self, x):
-        if args.use_bow:
-            x_bow = x[:,4096:]
-            x = x[:,:4096]
-            x = F.cast(x, np.int32)
-
-        h = self.embed(x)
-        if self.first:
-            print('emb', h.data.shape)
-
-        h = F.swapaxes(h, 1, 2)
-        h = F.dropout(h, self.dropout)
+    def call_trinet(self, h):
         prev_h = h
 
         #### Block 1 ####
@@ -163,7 +168,8 @@ class CNNModel(chainer.Chain):
             h = F.relu(h)
         #h = F.dropout(h, self.dropout)
         if self.first:
-            print('swp', h.data.shape)
+            print('### 3-net ###')
+            print('inp', h.data.shape)
         h = self.conv1(h)
         if self.first:
             print('cv1', h.data.shape)
@@ -181,35 +187,6 @@ class CNNModel(chainer.Chain):
         h = F.average_pooling_nd(h, 2)
         if self.first:
             print('av1', h.data.shape)
-
-        # #### Block 1b ####
-        # if args.bn:
-        #     h_b = self.bn1_b(prev_h)
-        # if args.activation:
-        #     h_b = F.relu(h_b)
-        # h_b = self.conv1_b(h_b)
-        # if self.first:
-        #     print('cv1b', h_b.data.shape)
-        #
-        # h_b = F.dropout(h_b, self.dropout)
-        # if args.bn:
-        #     h_b = self.bn2_b(h_b)
-        # if args.activation:
-        #     h_b = F.relu(h_b)
-        # h_b = F.average_pooling_nd(h_b, 4)
-        # if self.first:
-        #     print('av1b', h_b.data.shape)
-        #
-        # h = F.concat((h, h_b))
-        # if self.first:
-        #     print('mrb', h.data.shape)
-        #     #h = F.average_pooling_nd(h, 2)
-        # h = F.swapaxes(h, 1, 2)
-        # h = F.average_pooling_nd(h, 2)
-        # h = F.swapaxes(h, 1, 2)
-        # if self.first:
-        #     print('avb', h.data.shape)
-
 
         prev_h = F.average_pooling_nd(prev_h, 8)
         h = F.concat((h, prev_h))
@@ -245,7 +222,6 @@ class CNNModel(chainer.Chain):
         prev_h = h
         if self.first:
             print('rn2', h.data.shape)
-
 
         #### Block 3 ####
         if args.bn:
@@ -302,59 +278,186 @@ class CNNModel(chainer.Chain):
             print('av4', prev_h.data.shape)
 
         h = F.concat((h, prev_h))
-        prev_h = h
         if self.first:
             print('mr4', h.data.shape)
 
-        #h = F.average_pooling_nd(h, 2)
-
-
-        #### Block 5 ####
-        # if args.bn:
-        #     h = self.bn9(h)
-        # if args.activation:
-        #     h = F.relu(h)
-        # h = self.conv9(h)
-        # if self.first:
-        #     print('cv9', h.data.shape)
-        #
-        #
-        # h = F.dropout(h, self.dropout)
-        #
-        # if args.bn:
-        #     h = self.bn10(h)
-        # if args.activation:
-        #     h = F.relu(h)
-        # h = self.conv10(h)
-        # if self.first:
-        #     print('cv10', h.data.shape)
-        #
-        #
-        # prev_h = F.average_pooling_nd(prev_h, 4)
-        # if self.first:
-        #     print('av4', prev_h.data.shape)
-        #
-        # h = F.concat((h, prev_h))
-        # prev_h = h
-        # if self.first:
-        #     print('mr4', h.data.shape)
-
-
-        #### Fully Connected ####
+        h = F.dropout(h, self.dropout)
+        h = F.relu(h)
+        h = self.fctri(h)
         if self.first:
-            print('Hidden has to deal with {0} units as input'.format(h.shape[1]*h.shape[2]))
+            print('fctri', h.data.shape)
 
-        # h = F.dropout(h, self.dropout)
-        # h = F.relu(h)
-        # h = self.fc3(h)
-        # if self.first:
-        #     print('fc3', h.data.shape)
+        return h
+
+    def call_fournet(self, h):
+        prev_h = h
+
+        #### Block 1 ####
+        if args.bn:
+            h = self.bn1_b(h)
+        if args.activation:
+            h = F.relu(h)
+        #h = F.dropout(h, self.dropout)
+        if self.first:
+            print('### 4-net ###')
+            print('inp', h.data.shape)
+        h = self.conv1_b(h)
+        if self.first:
+            print('cv1', h.data.shape)
+
+        h = F.dropout(h, self.dropout)
+
+        if args.bn:
+            h = self.bn2_b(h)
+        if args.activation:
+            h = F.relu(h)
+        h = self.conv2_b(h)
+        if self.first:
+            print('cv2', h.data.shape)
+
+        h = F.average_pooling_nd(h, 2)
+        if self.first:
+            print('av1', h.data.shape)
+
+        prev_h = F.average_pooling_nd(prev_h, 8)
+        h = F.concat((h, prev_h))
+        prev_h = h
+        if self.first:
+            print('rn1', h.data.shape)
+
+        #### Block 2 ####
+        if args.bn:
+            h = self.bn3_b(h)
+        if args.activation:
+            h = F.relu(h)
+        h = self.conv3_b(h)
+        if self.first:
+            print('cv3', h.data.shape)
+
+        h = F.dropout(h, self.dropout)
+
+        if args.bn:
+            h = self.bn4_b(h)
+        if args.activation:
+            h = F.relu(h)
+        h = self.conv4_b(h)
+        if self.first:
+            print('cv4', h.data.shape)
+
+
+        prev_h = F.average_pooling_nd(prev_h, 4)
+        if self.first:
+            print('av2', prev_h.data.shape)
+
+        h = F.concat((h, prev_h))
+        prev_h = h
+        if self.first:
+            print('rn2', h.data.shape)
+
+
+        #### Block 3 ####
+        if args.bn:
+            h = self.bn5_b(h)
+        if args.activation:
+            h = F.relu(h)
+        h = self.conv5_b(h)
+        if self.first:
+            print('cv5', h.data.shape)
+
+        h = F.dropout(h, self.dropout)
+
+        if args.bn:
+            h = self.bn6_b(h)
+        if args.activation:
+            h = F.relu(h)
+        h = self.conv6_b(h)
+        if self.first:
+            print('cv6', h.data.shape)
+
+
+        prev_h = F.average_pooling_nd(prev_h, 4)
+        if self.first:
+            print('av3', prev_h.data.shape)
+
+        h = F.concat((h, prev_h))
+        prev_h = h
+        if self.first:
+            print('mr3', h.data.shape)
+
+
+        #### Block 4 ####
+        if args.bn:
+            h = self.bn7_b(h)
+        if args.activation:
+            h = F.relu(h)
+        h = self.conv7_b(h)
+        if self.first:
+            print('cv7', h.data.shape)
+
+        h = F.dropout(h, self.dropout)
+
+        if args.bn:
+            h = self.bn8_b(h)
+        if args.activation:
+            h = F.relu(h)
+        h = self.conv8_b(h)
+        if self.first:
+            print('cv8', h.data.shape)
+
+        prev_h = F.average_pooling_nd(prev_h, 4)
+        if self.first:
+            print('av4', prev_h.data.shape)
+
+        h = F.concat((h, prev_h))
+        if self.first:
+            print('mr4', h.data.shape)
 
         h = F.dropout(h, self.dropout)
         h = F.relu(h)
-        h = self.fc4(h)
+        h = self.fcfour(h)
         if self.first:
-            print('fc4', h.data.shape)
+            print('fcfour', h.data.shape)
+
+        return h
+
+    def __call__(self, x):
+        if args.use_bow:
+            x_bow = x[:,8192:,:]
+            x = x[:,:8192,:]
+            x = F.cast(x, np.int32)
+
+        h = self.embed(x)
+        if self.first:
+            print('emb', h.data.shape)
+
+        h = F.swapaxes(h, 1, 2)
+        h = F.dropout(h, self.dropout)
+
+        if args.use_tri:
+            h_tri = h[:,:,:4096]
+            h_tri = self.call_trinet(h_tri)
+        if args.use_four:
+            h_four = h[:,:,4096:8192]
+            h_four = self.call_fournet(h_four)
+
+        if args.use_tri and args.use_four:
+            h = F.concat((h_tri, h_four))
+        elif args.use_tri:
+            h = h_tri
+        elif args.use_four:
+            h = h_four
+
+        #h = F.average_pooling_nd(h, 2)
+
+        #### Fully Connected ####
+        # if self.first:
+        #     print('Hidden has to deal with {0} units as input'.format(h.shape[1]*h.shape[2]))
+        #
+        # h = F.dropout(h, self.dropout)
+        # h = F.relu(h)
+        # h = self.fc4(h)
+        # if self.first:
+        #     print('fc4', h.data.shape)
 
         h = F.dropout(h, self.dropout)
         h = F.relu(h)
@@ -461,6 +564,8 @@ def parse_args():
     parser.add_argument('--bn', action='store_true')
     parser.add_argument('--subset', type=int, default=0)
     parser.add_argument('--use_bow', action='store_true')
+    parser.add_argument('--use_tri', action='store_true')
+    parser.add_argument('--use_four', action='store_true')
     return parser.parse_args()
 
 
