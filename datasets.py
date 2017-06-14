@@ -33,9 +33,13 @@ def find_ngrams(string, n):
     return list(zip(*[string[i:] for i in range(n)]))
 
 def read_nli(data_dir, fold, char_to_id, label_to_id, word_to_id, maxlen=128, subset=False):
-    unk = char_to_id['<UNK>']
-    bos = char_to_id['<S>']
-    eos = char_to_id['</S>']
+    unk = char_to_id[0]['<UNK>']
+    bos = char_to_id[0]['<S>']
+    eos = char_to_id[0]['</S>']
+
+    char_to_id[1]['<UNK>']
+    char_to_id[1]['<S>']
+    char_to_id[1]['</S>']
 
     word_to_id['<UNK>']
     word_to_id['<S>']
@@ -65,11 +69,11 @@ def read_nli(data_dir, fold, char_to_id, label_to_id, word_to_id, maxlen=128, su
                 lines = in_f.readlines()
                 char_rep = []
                 if fold == 'train':
-                    char_rep.append([bos] + [char_to_id[ngram] for line in lines for ngram in find_ngrams(line, 3)] + [eos])
-                    char_rep.append([bos] + [char_to_id[ngram] for line in lines for ngram in find_ngrams(line, 4)] + [eos])
+                    char_rep.append([bos] + [char_to_id[0][ngram] for line in lines for ngram in find_ngrams(line, 3)] + [eos])
+                    char_rep.append([bos] + [char_to_id[1][ngram] for line in lines for ngram in find_ngrams(line, 4)] + [eos])
                 else:
-                    char_rep.append([bos] + [char_to_id.get(ngram, unk) for line in lines for ngram in find_ngrams(line, 3)] + [eos])
-                    char_rep.append([bos] + [char_to_id.get(ngram, unk) for line in lines for ngram in find_ngrams(line, 4)] + [eos])
+                    char_rep.append([bos] + [char_to_id[0].get(ngram, unk) for line in lines for ngram in find_ngrams(line, 3)] + [eos])
+                    char_rep.append([bos] + [char_to_id[1].get(ngram, unk) for line in lines for ngram in find_ngrams(line, 4)] + [eos])
 
                 # char_rep = []
                 # for line in in_f:
@@ -93,7 +97,7 @@ def read_nli(data_dir, fold, char_to_id, label_to_id, word_to_id, maxlen=128, su
                     word_rep.append([bos] + [word_to_id[w] for line in in_f for w in line.split()] + [eos])
                 else:
                     word_rep.append([bos] + [word_to_id.get(w, unk) for line in in_f for w in line.split()] + [eos])
-                    
+
                 # char_rep = []
                 # for line in in_f:
                 #     for n in range(6):
@@ -102,10 +106,7 @@ def read_nli(data_dir, fold, char_to_id, label_to_id, word_to_id, maxlen=128, su
                 if word_rep: # No empty lines
                     sents[fname[:-4]][0].extend(word_rep)
 
-            #if idx > 20:
-            #    break
-    #import pdb; pdb.set_trace()
-    print(len(char_to_id))
+    #print(len(char_to_id))
     X, y = [], []
     for key, entry in sorted(sents.items(), key=lambda x: -len(x[1])):
         #if labels[key] not in [10, 8]: continue

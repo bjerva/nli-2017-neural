@@ -62,8 +62,8 @@ class CNNModel(chainer.Chain):
         sent_len = args.maxlen
         out_channels = int(args.maxlen*2)
         super().__init__(
-            embed_tri=L.EmbedID(vocab_size, out_size, ignore_label=-1),
-            embed_four=L.EmbedID(vocab_size, out_size, ignore_label=-1),
+            embed_tri=L.EmbedID(vocab_size[0], out_size, ignore_label=-1),
+            embed_four=L.EmbedID(vocab_size[1], out_size, ignore_label=-1),
             embed_word=L.EmbedID(word_vocab_size, out_size, ignore_label=-1),
 
             # Block 1
@@ -130,12 +130,45 @@ class CNNModel(chainer.Chain):
             conv8_b = L.ConvolutionND(ndim=1,
                 in_channels=out_size*8, out_channels=out_size*8, ksize=2, stride=2, cover_all=True),
 
+            # Block 1
+            bn1_w = L.BatchNormalization(out_size),
+            conv1_w = L.ConvolutionND(ndim=1,
+                in_channels=out_size, out_channels=out_size, ksize=2, stride=2, cover_all=True),
+            bn2_w = L.BatchNormalization(out_size),
+            conv2_w = L.ConvolutionND(ndim=1,
+                in_channels=out_size, out_channels=out_size, ksize=2, stride=2, cover_all=True),
+
+            # Block 2
+            bn3_w = L.BatchNormalization(out_size*2),
+            conv3_w = L.ConvolutionND(ndim=1,
+                in_channels=out_size*2, out_channels=out_size*2, ksize=2, stride=2, cover_all=True),
+            bn4_w = L.BatchNormalization(out_size*2),
+            conv4_w = L.ConvolutionND(ndim=1,
+                in_channels=out_size*2, out_channels=out_size*2, ksize=2, stride=2, cover_all=True),
+
+            # Block 3
+            bn5_w = L.BatchNormalization(out_size*4),
+            conv5_w = L.ConvolutionND(ndim=1,
+                in_channels=out_size*4, out_channels=out_size*4, ksize=2, stride=2, cover_all=True),
+            bn6_w = L.BatchNormalization(out_size*4),
+            conv6_w = L.ConvolutionND(ndim=1,
+                in_channels=out_size*4, out_channels=out_size*4, ksize=2, stride=2, cover_all=True),
+
+            # Block 4
+            bn7_w = L.BatchNormalization(out_size*8),
+            conv7_w = L.ConvolutionND(ndim=1,
+                in_channels=out_size*8, out_channels=out_size*8, ksize=2, stride=2, cover_all=True),
+            bn8_w = L.BatchNormalization(out_size*8),
+            conv8_w = L.ConvolutionND(ndim=1,
+                in_channels=out_size*8, out_channels=out_size*8, ksize=2, stride=2, cover_all=True),
+
             # fcb1 = L.Linear(None, 1024),
             # fcb2 = L.Linear(1024, 128),
             # Fully connected
             #fc3 = L.Linear(None, 2048),
             fctri  = L.Linear(None, 2048),
-            fcfour = L.Linear(None, 2048),
+            #fcfour = L.Linear(None, 2048),
+            fcword = L.Linear(None, 1024),
             #fc4 = L.Linear(None, 1024),
             fc5 = L.Linear(None, 1024),
             fc6 = L.Linear(None, 256),
@@ -422,6 +455,138 @@ class CNNModel(chainer.Chain):
 
         return h
 
+    def call_wordnet(self, h):
+        prev_h = h
+
+        #### Block 1 ####
+        if args.bn:
+            h = self.bn1_w(h)
+        if args.activation:
+            h = F.relu(h)
+        #h = F.dropout(h, self.dropout)
+        if self.first:
+            print('### word-net ###')
+            print('inp', h.data.shape)
+        h = self.conv1_w(h)
+        if self.first:
+            print('cv1', h.data.shape)
+
+        h = F.dropout(h, self.dropout)
+
+        if args.bn:
+            h = self.bn2_w(h)
+        if args.activation:
+            h = F.relu(h)
+        h = self.conv2_w(h)
+        if self.first:
+            print('cv2', h.data.shape)
+
+        h = F.average_pooling_nd(h, 2)
+        if self.first:
+            print('av1', h.data.shape)
+
+        h = F.dropout(h, self.dropout+0.1)
+
+        prev_h = F.average_pooling_nd(prev_h, 8)
+        h = F.concat((h, prev_h))
+        if self.first:
+            print('rn1', h.data.shape)
+
+        # #### Block 2 ####
+        # if args.bn:
+        #     h = self.bn3_w(h)
+        # if args.activation:
+        #     h = F.relu(h)
+        # h = self.conv3_w(h)
+        # if self.first:
+        #     print('cv3', h.data.shape)
+        #
+        # h = F.dropout(h, self.dropout)
+        #
+        # if args.bn:
+        #     h = self.bn4_w(h)
+        # if args.activation:
+        #     h = F.relu(h)
+        # h = self.conv4_w(h)
+        # if self.first:
+        #     print('cv4', h.data.shape)
+        #
+        #
+        # prev_h = F.average_pooling_nd(prev_h, 4)
+        # if self.first:
+        #     print('av2', prev_h.data.shape)
+        #
+        # h = F.concat((h, prev_h))
+        # prev_h = h
+        # if self.first:
+        #     print('rn2', h.data.shape)
+        #
+        #
+        # #### Block 3 ####
+        # if args.bn:
+        #     h = self.bn5_w(h)
+        # if args.activation:
+        #     h = F.relu(h)
+        # h = self.conv5_w(h)
+        # if self.first:
+        #     print('cv5', h.data.shape)
+        #
+        # h = F.dropout(h, self.dropout)
+        #
+        # if args.bn:
+        #     h = self.bn6_w(h)
+        # if args.activation:
+        #     h = F.relu(h)
+        # h = self.conv6_w(h)
+        # if self.first:
+        #     print('cv6', h.data.shape)
+        #
+        #
+        # prev_h = F.average_pooling_nd(prev_h, 4)
+        # if self.first:
+        #     print('av3', prev_h.data.shape)
+        #
+        # h = F.concat((h, prev_h))
+        # prev_h = h
+        # if self.first:
+        #     print('mr3', h.data.shape)
+        #
+        #
+        # #### Block 4 ####
+        # if args.bn:
+        #     h = self.bn7_w(h)
+        # if args.activation:
+        #     h = F.relu(h)
+        # h = self.conv7_w(h)
+        # if self.first:
+        #     print('cv7', h.data.shape)
+        #
+        # h = F.dropout(h, self.dropout)
+        #
+        # if args.bn:
+        #     h = self.bn8_w(h)
+        # if args.activation:
+        #     h = F.relu(h)
+        # h = self.conv8_w(h)
+        # if self.first:
+        #     print('cv8', h.data.shape)
+        #
+        # prev_h = F.average_pooling_nd(prev_h, 2)
+        # if self.first:
+        #     print('av4', prev_h.data.shape)
+        #
+        # h = F.concat((h, prev_h))
+        # if self.first:
+        #     print('mr4', h.data.shape)
+
+        h = F.dropout(h, self.dropout)
+        h = F.relu(h)
+        h = self.fcword(h)
+        if self.first:
+            print('fcword', h.data.shape)
+
+        return h
+
     def __call__(self, x):
         if args.use_bow:
             assert False # NOT WORKING ATM
@@ -429,6 +594,7 @@ class CNNModel(chainer.Chain):
             x = x[:,:8192]
             x = F.cast(x, np.int32)
 
+        hs = []
         if args.use_tri:
             x_tri = x[:,:4096]
             h = self.embed_tri(x_tri)
@@ -438,6 +604,8 @@ class CNNModel(chainer.Chain):
             h = F.swapaxes(h, 1, 2)
             h = F.dropout(h, self.dropout)
             h_tri = self.call_trinet(h)
+            hs.append(h_tri)
+
         if args.use_four:
             x_four = x[:,4096:8192]
             h = self.embed_four(x_four)
@@ -447,25 +615,26 @@ class CNNModel(chainer.Chain):
             h = F.swapaxes(h, 1, 2)
             h = F.dropout(h, self.dropout)
             h_four = self.call_fournet(h)
+            hs.append(h_four)
+
         if args.use_words:
             x_words = x[:,8192:]
             h = self.embed_word(x_words)
-            # Pooling?
-            # LSTM?
-            assert False#import pdb; pdb.set_trace()
+            h = F.swapaxes(h, 1, 2)
+            h = F.dropout(h, self.dropout)
+            h_words = self.call_wordnet(h)
+            hs.append(h_words)
 
-        if args.use_tri and args.use_four:
-            h = F.concat((h_tri, h_four))
-        elif args.use_tri:
-            h = h_tri
-        elif args.use_four:
-            h = h_four
+        if len(hs) > 1:
+            h = F.concat(hs)
+        else:
+            h = hs[0]
 
         #h = F.average_pooling_nd(h, 2)
 
         #### Fully Connected ####
-        # if self.first:
-        #     print('Hidden has to deal with {0} units as input'.format(h.shape[1]*h.shape[2]))
+        if self.first:
+            print('After concat: {0}'.format(h.data.shape))
         #
         # h = F.dropout(h, self.dropout)
         # h = F.relu(h)
@@ -588,12 +757,9 @@ args = parse_args()
 def main():
 
 
-    char_to_id = defaultdict(lambda: len(char_to_id))
+    char_to_id = [defaultdict(lambda: len(char_to_id[0])), defaultdict(lambda: len(char_to_id[1]))]
     word_to_id = defaultdict(lambda: len(word_to_id))
     label_to_id = defaultdict(lambda: len(label_to_id))
-    unk = char_to_id['<UNK>']
-    bos = char_to_id['<S>']
-    eos = char_to_id['</S>']
     if 'Imdb' in args.dataset:
         train, test = IMDBDataset(os.path.join(args.dataset, 'train'), args.vocabulary, char_to_id, args.maxlen),\
                       IMDBDataset(os.path.join(args.dataset, 'test'), args.vocabulary, char_to_id, args.maxlen)
@@ -603,11 +769,11 @@ def main():
         train = NLIDataset(args.dataset, 'train', char_to_id, label_to_id, word_to_id, args.maxlen, args.batchsize, repeat=True, subset=args.subset, use_bow=args.use_bow)
         test = NLIDataset(args.dataset, 'dev', char_to_id, label_to_id, word_to_id, args.maxlen, args.batchsize, repeat=False, shuffle=False, subset=args.subset, use_bow=args.use_bow)
 
-    vocab_size = len(char_to_id) + 1#max(map(max, train.pos_dataset))
+    vocab_size = [len(char_to_id[0]) + 1, len(char_to_id[1]) + 1]#max(map(max, train.pos_dataset))
     word_vocab_size = len(word_to_id) + 1
     n_labels = 2 if len(label_to_id) == 0 else len(label_to_id)
 
-    print('{0} char ids'.format(vocab_size))
+    print('{0}, {1} char ids'.format(vocab_size[0], vocab_size[1]))
     print('{0} word ids'.format(word_vocab_size))
     print('{0} labels'.format(n_labels))
     # model = L.Classifier(QRNNModel(
@@ -656,7 +822,7 @@ def main():
     trainer.extend(extensions.PrintReport(
         ['epoch', 'main/loss', 'validation/main/loss',
          'main/accuracy', 'validation/main/accuracy']))
-    trainer.extend(extensions.ProgressBar(update_interval=10))
+    trainer.extend(extensions.ProgressBar(update_interval=8))
 
     if args.resume:
         chainer.serializers.load_npz(args.resume, trainer)
