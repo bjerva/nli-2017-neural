@@ -32,10 +32,14 @@ def discover_dataset(path, char_to_id):
 def find_ngrams(string, n):
     return list(zip(*[string[i:] for i in range(n)]))
 
-def read_nli(data_dir, fold, char_to_id, label_to_id, maxlen=128, subset=False):
+def read_nli(data_dir, fold, char_to_id, label_to_id, word_to_id, maxlen=128, subset=False):
     unk = char_to_id['<UNK>']
     bos = char_to_id['<S>']
     eos = char_to_id['</S>']
+
+    word_to_id['<UNK>']
+    word_to_id['<S>']
+    word_to_id['</S>']
 
     train_label_path = os.path.join(data_dir, 'labels', fold, 'labels.{0}.csv'.format(fold))
     labels = {}
@@ -48,10 +52,8 @@ def read_nli(data_dir, fold, char_to_id, label_to_id, maxlen=128, subset=False):
             if subset == 2 and native_lang not in ['TEL', 'HIN']: continue
             labels[entry_id] = label_to_id[native_lang]
 
-    use_tokenized = False
-    version = 'tokenized' if use_tokenized else 'original'
-    train_essay_path = os.path.join(data_dir, 'essays', fold, version)
     sents = defaultdict(list)
+    train_essay_path = os.path.join(data_dir, 'essays', fold, 'original')
     for root, dirs, files in os.walk(train_essay_path):
         for idx, fname in enumerate(files):
             if fname[:-4] not in labels: continue
@@ -62,8 +64,12 @@ def read_nli(data_dir, fold, char_to_id, label_to_id, maxlen=128, subset=False):
                 #char_rep = [bos] + [char_to_id[ngram] for line in in_f for ngram in find_ngrams(line, 4)+find_ngrams(line, 3)+find_ngrams(line, 2)+find_ngrams(line, 1)] + [eos]
                 lines = in_f.readlines()
                 char_rep = []
-                char_rep.append([bos] + [char_to_id[ngram] for line in lines for ngram in find_ngrams(line, 3)] + [eos])
-                char_rep.append([bos] + [char_to_id[ngram] for line in lines for ngram in find_ngrams(line, 4)] + [eos])
+                if fold == 'train':
+                    char_rep.append([bos] + [char_to_id[ngram] for line in lines for ngram in find_ngrams(line, 3)] + [eos])
+                    char_rep.append([bos] + [char_to_id[ngram] for line in lines for ngram in find_ngrams(line, 4)] + [eos])
+                else:
+                    char_rep.append([bos] + [char_to_id.get(ngram, unk) for line in lines for ngram in find_ngrams(line, 3)] + [eos])
+                    char_rep.append([bos] + [char_to_id.get(ngram, unk) for line in lines for ngram in find_ngrams(line, 4)] + [eos])
 
                 # char_rep = []
                 # for line in in_f:
@@ -73,6 +79,28 @@ def read_nli(data_dir, fold, char_to_id, label_to_id, maxlen=128, subset=False):
                 if char_rep: # No empty lines
                     sents[fname[:-4]].append(char_rep)
 
+    train_essay_path = os.path.join(data_dir, 'essays', fold, 'tokenized')
+    for root, dirs, files in os.walk(train_essay_path):
+        for idx, fname in enumerate(files):
+            if fname[:-4] not in labels: continue
+            with open(os.path.join(train_essay_path, fname)) as in_f:
+                #for line in in_f:
+                #char_rep = [[bos] + [char_to_id[char] for char in word] + [eos] for line in in_f for word in line.split()]
+                #for line in in_f:
+                #char_rep = [bos] + [char_to_id[ngram] for line in in_f for ngram in find_ngrams(line, 4)+find_ngrams(line, 3)+find_ngrams(line, 2)+find_ngrams(line, 1)] + [eos]
+                word_rep = []
+                if fold == 'train':
+                    word_rep.append([bos] + [word_to_id[w] for line in in_f for w in line.split()] + [eos])
+                else:
+                    word_rep.append([bos] + [word_to_id.get(w, unk) for line in in_f for w in line.split()] + [eos])
+                    
+                # char_rep = []
+                # for line in in_f:
+                #     for n in range(6):
+                #         char_rep.extend([char_to_id[''.join(ngram)] for ngram in find_ngrams(line, n)])
+
+                if word_rep: # No empty lines
+                    sents[fname[:-4]][0].extend(word_rep)
 
             #if idx > 20:
             #    break
@@ -117,8 +145,8 @@ class IMDBDataset(dataset_mixin.DatasetMixin):
         return (dataset[idx], np.array(label, dtype=np.int32))
 
 class NLIDataset(SerialIterator):
-    def __init__(self, path, fold, char_to_id, label_to_id, maxlen=128, batch_size=1, repeat=True, shuffle=True, subset=False, use_bow=False):
-        X, y = read_nli(path, fold, char_to_id, label_to_id, maxlen=maxlen, subset=subset)
+    def __init__(self, path, fold, char_to_id, label_to_id, word_to_id, maxlen=128, batch_size=1, repeat=True, shuffle=True, subset=False, use_bow=False):
+        X, y = read_nli(path, fold, char_to_id, label_to_id, word_to_id, maxlen=maxlen, subset=subset)
         print('{0} instances in {1}'.format(len(X), fold))
         #print('longest sentence is {0} chars'.format(max(map(len, X))))
         self.dataset = list(zip(X, y))#pad_dataset(X, maxlen)
@@ -171,13 +199,15 @@ class NLIDataset(SerialIterator):
         X, y = zip(*data)
 
         mlen = self.maxlen#max(map(len, X))
+        mlen_sent = 256
         #mlen_word = 16
         # if max(map(len, X)) > mlen:
         #     print(max(map(len, X)))
 
         X_trigram  = np.asarray([sent[0][:mlen]  + [-1]*(mlen-len(sent[0])) for sent in X], dtype=np.int32)
         X_fourgram = np.asarray([sent[1][:mlen]  + [-1]*(mlen-len(sent[1])) for sent in X], dtype=np.int32)
-        X = np.hstack([X_trigram, X_fourgram])
+        X_words = np.asarray([sent[2][:mlen_sent]  + [-1]*(mlen_sent-len(sent[2])) for sent in X], dtype=np.int32)
+        X = np.hstack([X_trigram, X_fourgram, X_words])
         if self.use_bow:
             X_onehot = np.zeros((X.shape[0], 140000), dtype=np.float32)
             for idx, sent in enumerate(X):
