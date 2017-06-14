@@ -58,11 +58,13 @@ class RNNModel(chainer.Chain):
         return self.fc(h)
 
 class CNNModel(chainer.Chain):
-    def __init__(self, vocab_size, n_labels, out_size, dropout):
+    def __init__(self, vocab_size, n_labels, word_vocab_size, out_size, dropout):
         sent_len = args.maxlen
         out_channels = int(args.maxlen*2)
         super().__init__(
-            embed=L.EmbedID(vocab_size, out_size, ignore_label=-1),
+            embed_tri=L.EmbedID(vocab_size, out_size, ignore_label=-1),
+            embed_four=L.EmbedID(vocab_size, out_size, ignore_label=-1),
+            embed_word=L.EmbedID(word_vocab_size, out_size, ignore_label=-1),
 
             # Block 1
             bn1 = L.BatchNormalization(out_size),
@@ -422,23 +424,35 @@ class CNNModel(chainer.Chain):
 
     def __call__(self, x):
         if args.use_bow:
-            x_bow = x[:,8192:,:]
-            x = x[:,:8192,:]
+            assert False # NOT WORKING ATM
+            x_bow = x[:,8192:]
+            x = x[:,:8192]
             x = F.cast(x, np.int32)
 
-        h = self.embed(x)
-        if self.first:
-            print('emb', h.data.shape)
-
-        h = F.swapaxes(h, 1, 2)
-        h = F.dropout(h, self.dropout)
-
         if args.use_tri:
-            h_tri = h[:,:,:4096]
-            h_tri = self.call_trinet(h_tri)
+            x_tri = x[:,:4096]
+            h = self.embed_tri(x_tri)
+            if self.first:
+                print('emb', h.data.shape)
+
+            h = F.swapaxes(h, 1, 2)
+            h = F.dropout(h, self.dropout)
+            h_tri = self.call_trinet(h)
         if args.use_four:
-            h_four = h[:,:,4096:8192]
-            h_four = self.call_fournet(h_four)
+            x_four = x[:,4096:8192]
+            h = self.embed_four(x_four)
+            if self.first:
+                print('emb', h.data.shape)
+
+            h = F.swapaxes(h, 1, 2)
+            h = F.dropout(h, self.dropout)
+            h_four = self.call_fournet(h)
+        if args.use_words:
+            x_words = x[:,8192:]
+            h = self.embed_word(x_words)
+            # Pooling?
+            # LSTM?
+            assert False#import pdb; pdb.set_trace()
 
         if args.use_tri and args.use_four:
             h = F.concat((h_tri, h_four))
@@ -566,6 +580,7 @@ def parse_args():
     parser.add_argument('--use_bow', action='store_true')
     parser.add_argument('--use_tri', action='store_true')
     parser.add_argument('--use_four', action='store_true')
+    parser.add_argument('--use_words', action='store_true')
     return parser.parse_args()
 
 
@@ -574,6 +589,7 @@ def main():
 
 
     char_to_id = defaultdict(lambda: len(char_to_id))
+    word_to_id = defaultdict(lambda: len(word_to_id))
     label_to_id = defaultdict(lambda: len(label_to_id))
     unk = char_to_id['<UNK>']
     bos = char_to_id['<S>']
@@ -584,13 +600,15 @@ def main():
 
     elif 'nli' in args.dataset:
         print('nli!')
-        train = NLIDataset(args.dataset, 'train', char_to_id, label_to_id, args.maxlen, args.batchsize, repeat=True, subset=args.subset, use_bow=args.use_bow)
-        test = NLIDataset(args.dataset, 'dev', char_to_id, label_to_id, args.maxlen, args.batchsize, repeat=False, shuffle=False, subset=args.subset, use_bow=args.use_bow)
+        train = NLIDataset(args.dataset, 'train', char_to_id, label_to_id, word_to_id, args.maxlen, args.batchsize, repeat=True, subset=args.subset, use_bow=args.use_bow)
+        test = NLIDataset(args.dataset, 'dev', char_to_id, label_to_id, word_to_id, args.maxlen, args.batchsize, repeat=False, shuffle=False, subset=args.subset, use_bow=args.use_bow)
 
     vocab_size = len(char_to_id) + 1#max(map(max, train.pos_dataset))
+    word_vocab_size = len(word_to_id) + 1
     n_labels = 2 if len(label_to_id) == 0 else len(label_to_id)
 
-    print('{0} chars'.format(vocab_size))
+    print('{0} char ids'.format(vocab_size))
+    print('{0} word ids'.format(word_vocab_size))
     print('{0} labels'.format(n_labels))
     # model = L.Classifier(QRNNModel(
     #    vocab_size, n_labels, args.out_size, args.hidden_size, args.dropout))
@@ -599,7 +617,7 @@ def main():
     #    vocab_size, n_labels, args.out_size, args.hidden_size, args.dropout))
 
     model = L.Classifier(CNNModel(
-        vocab_size, n_labels, args.out_size, args.dropout))
+        vocab_size, n_labels, word_vocab_size, args.out_size, args.dropout))
 
     # model = L.Classifier(FFNNModel(
     #     vocab_size, n_labels,args.hidden_size, args.dropout))
@@ -611,7 +629,8 @@ def main():
     if args.gpu >= 0:
         chainer.cuda.get_device(args.gpu).use()
         model.to_gpu()
-        model.predictor.embed.to_gpu()
+        model.predictor.embed_tri.to_gpu()
+        model.predictor.embed_four.to_gpu()
         # model.predictor.char_lstm.to_gpu()
 
     optimizer = chainer.optimizers.Adam()#RMSprop(lr=0.001, alpha=0.9)
