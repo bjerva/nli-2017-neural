@@ -83,6 +83,7 @@ def read_nli(data_dir, fold, char_to_id, label_to_id, word_to_id, maxlen=128, su
                 if char_rep: # No empty lines
                     sents[fname[:-4]].append(char_rep)
 
+    longest_sent = 0
     train_essay_path = os.path.join(data_dir, 'essays', fold, 'tokenized')
     for root, dirs, files in os.walk(train_essay_path):
         for idx, fname in enumerate(files):
@@ -98,6 +99,8 @@ def read_nli(data_dir, fold, char_to_id, label_to_id, word_to_id, maxlen=128, su
                 else:
                     word_rep.append([bos] + [word_to_id.get(w, unk) for line in in_f for w in line.split()] + [eos])
 
+                longest_sent = max(longest_sent, len(word_rep[-1]))
+
                 # char_rep = []
                 # for line in in_f:
                 #     for n in range(6):
@@ -106,7 +109,7 @@ def read_nli(data_dir, fold, char_to_id, label_to_id, word_to_id, maxlen=128, su
                 if word_rep: # No empty lines
                     sents[fname[:-4]][0].extend(word_rep)
 
-    #print(len(char_to_id))
+    print('{0} words in longest sent'.format(longest_sent))#len(char_to_id))
     X, y = [], []
     for key, entry in sorted(sents.items(), key=lambda x: -len(x[1])):
         #if labels[key] not in [10, 8]: continue
@@ -200,7 +203,7 @@ class NLIDataset(SerialIterator):
         X, y = zip(*data)
 
         mlen = self.maxlen#max(map(len, X))
-        mlen_sent = 256
+        mlen_sent = 1024
         #mlen_word = 16
         # if max(map(len, X)) > mlen:
         #     print(max(map(len, X)))
