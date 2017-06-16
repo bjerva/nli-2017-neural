@@ -2,9 +2,9 @@ from __future__ import print_function
 import argparse
 import os
 import random
-random.seed(1000)
+# random.seed(1000)
 import numpy as np
-np.random.seed(1000)
+# np.random.seed(1000)
 
 import chainer
 import chainer.links as L
@@ -162,8 +162,8 @@ class CNNModel(chainer.Chain):
             conv8_w = L.ConvolutionND(ndim=1,
                 in_channels=out_size*8, out_channels=out_size*8, ksize=2, stride=2, cover_all=True),
 
-            # fcb1 = L.Linear(None, 1024),
-            # fcb2 = L.Linear(1024, 128),
+            #fcb1 = L.Linear(None, 1024),
+            #fcb2 = L.Linear(1024, 128),
             # Fully connected
             #fc3 = L.Linear(None, 2048),
             fctri  = L.Linear(None, 2048),
@@ -471,7 +471,7 @@ class CNNModel(chainer.Chain):
         if self.first:
             print('cv1', h.data.shape)
 
-        h = F.dropout(h, self.dropout)
+        h = F.dropout(h, self.dropout+0.1)
 
         if args.bn:
             h = self.bn2_w(h)
@@ -492,34 +492,37 @@ class CNNModel(chainer.Chain):
         if self.first:
             print('rn1', h.data.shape)
 
-        # #### Block 2 ####
-        # if args.bn:
-        #     h = self.bn3_w(h)
-        # if args.activation:
-        #     h = F.relu(h)
-        # h = self.conv3_w(h)
-        # if self.first:
-        #     print('cv3', h.data.shape)
-        #
-        # h = F.dropout(h, self.dropout)
-        #
-        # if args.bn:
-        #     h = self.bn4_w(h)
-        # if args.activation:
-        #     h = F.relu(h)
-        # h = self.conv4_w(h)
-        # if self.first:
-        #     print('cv4', h.data.shape)
-        #
-        #
-        # prev_h = F.average_pooling_nd(prev_h, 4)
-        # if self.first:
-        #     print('av2', prev_h.data.shape)
-        #
-        # h = F.concat((h, prev_h))
-        # prev_h = h
-        # if self.first:
-        #     print('rn2', h.data.shape)
+        prev_h = h
+
+        #### Block 2 ####
+        if args.bn:
+            h = self.bn3_w(h)
+        if args.activation:
+            h = F.relu(h)
+        h = self.conv3_w(h)
+        if self.first:
+            print('cv3', h.data.shape)
+
+        h = F.dropout(h, self.dropout)
+
+        if args.bn:
+            h = self.bn4_w(h)
+        if args.activation:
+            h = F.relu(h)
+        h = self.conv4_w(h)
+        if self.first:
+            print('cv4', h.data.shape)
+
+        h = F.dropout(h, self.dropout)
+
+        prev_h = F.average_pooling_nd(prev_h, 4)
+        if self.first:
+            print('av2', prev_h.data.shape)
+
+        h = F.concat((h, prev_h))
+        prev_h = h
+        if self.first:
+            print('rn2', h.data.shape)
         #
         #
         # #### Block 3 ####
@@ -589,9 +592,9 @@ class CNNModel(chainer.Chain):
 
     def __call__(self, x):
         if args.use_bow:
-            assert False # NOT WORKING ATM
-            x_bow = x[:,8192:]
-            x = x[:,:8192]
+            #assert False # NOT WORKING ATM
+            x_bow = x[:,1024+8192:]
+            x = x[:,:1024+8192]
             x = F.cast(x, np.int32)
 
         hs = []
@@ -618,10 +621,10 @@ class CNNModel(chainer.Chain):
             hs.append(h_four)
 
         if args.use_words:
-            x_words = x[:,8192:]
+            x_words = x[:,8192:8192+1024]
             h = self.embed_word(x_words)
             h = F.swapaxes(h, 1, 2)
-            h = F.dropout(h, self.dropout)
+            h = F.dropout(h, self.dropout+0.1)
             h_words = self.call_wordnet(h)
             hs.append(h_words)
 
@@ -714,6 +717,17 @@ class TestModeEvaluator(extensions.Evaluator):
         model.train = True
         return ret
 
+best_dev = 1000.0
+def store_model(result):
+    global best_dev
+    dev_loss = result['validation/main/loss']
+    if dev_loss < best_dev:
+        best_dev = dev_loss
+        chainer.serializers.save_npz('./models/' + args.name + '.best-loss.npz', model)
+        with open('./logs/'+args.name+'_best_losses.txt', 'a') as out_f:
+            out_f.write('{0}\n'.format(best_dev))
+
+
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -750,12 +764,12 @@ def parse_args():
     parser.add_argument('--use_tri', action='store_true')
     parser.add_argument('--use_four', action='store_true')
     parser.add_argument('--use_words', action='store_true')
+    parser.add_argument('--name', type=str)
     return parser.parse_args()
 
 
-args = parse_args()
-def main():
-
+if __name__ == '__main__':
+    args = parse_args()
 
     char_to_id = [defaultdict(lambda: len(char_to_id[0])), defaultdict(lambda: len(char_to_id[1]))]
     word_to_id = defaultdict(lambda: len(word_to_id))
@@ -819,6 +833,8 @@ def main():
     #trainer.extend(extensions.ExponentialShift('lr', 0.5), trigger=(25, 'epoch'))
     trainer.extend(extensions.snapshot(), trigger=(args.epoch, 'epoch'))
     trainer.extend(extensions.LogReport())
+    trainer.extend(extensions.LogReport(postprocess=store_model,
+                                    trigger=(1, 'epoch')))
     trainer.extend(extensions.PrintReport(
         ['epoch', 'main/loss', 'validation/main/loss',
          'main/accuracy', 'validation/main/accuracy']))
@@ -828,6 +844,3 @@ def main():
         chainer.serializers.load_npz(args.resume, trainer)
 
     trainer.run()
-
-if __name__ == '__main__':
-    main()

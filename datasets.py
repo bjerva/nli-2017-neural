@@ -56,6 +56,7 @@ def read_nli(data_dir, fold, char_to_id, label_to_id, word_to_id, maxlen=128, su
             if subset == 2 and native_lang not in ['TEL', 'HIN']: continue
             labels[entry_id] = label_to_id[native_lang]
 
+    longest_sent = 0
     sents = defaultdict(list)
     train_essay_path = os.path.join(data_dir, 'essays', fold, 'original')
     for root, dirs, files in os.walk(train_essay_path):
@@ -75,6 +76,7 @@ def read_nli(data_dir, fold, char_to_id, label_to_id, word_to_id, maxlen=128, su
                     char_rep.append([bos] + [char_to_id[0].get(ngram, unk) for line in lines for ngram in find_ngrams(line, 3)] + [eos])
                     char_rep.append([bos] + [char_to_id[1].get(ngram, unk) for line in lines for ngram in find_ngrams(line, 4)] + [eos])
 
+                longest_sent = max(longest_sent, len(char_rep[-1]))
                 # char_rep = []
                 # for line in in_f:
                 #     for n in range(6):
@@ -83,7 +85,6 @@ def read_nli(data_dir, fold, char_to_id, label_to_id, word_to_id, maxlen=128, su
                 if char_rep: # No empty lines
                     sents[fname[:-4]].append(char_rep)
 
-    longest_sent = 0
     train_essay_path = os.path.join(data_dir, 'essays', fold, 'tokenized')
     for root, dirs, files in os.walk(train_essay_path):
         for idx, fname in enumerate(files):
@@ -99,7 +100,6 @@ def read_nli(data_dir, fold, char_to_id, label_to_id, word_to_id, maxlen=128, su
                 else:
                     word_rep.append([bos] + [word_to_id.get(w, unk) for line in in_f for w in line.split()] + [eos])
 
-                longest_sent = max(longest_sent, len(word_rep[-1]))
 
                 # char_rep = []
                 # for line in in_f:
@@ -109,7 +109,7 @@ def read_nli(data_dir, fold, char_to_id, label_to_id, word_to_id, maxlen=128, su
                 if word_rep: # No empty lines
                     sents[fname[:-4]][0].extend(word_rep)
 
-    print('{0} words in longest sent'.format(longest_sent))#len(char_to_id))
+    print('{0} chars in longest sent'.format(longest_sent))#len(char_to_id))
     X, y = [], []
     for key, entry in sorted(sents.items(), key=lambda x: -len(x[1])):
         #if labels[key] not in [10, 8]: continue
@@ -211,17 +211,17 @@ class NLIDataset(SerialIterator):
         X_trigram  = np.asarray([sent[0][:mlen]  + [-1]*(mlen-len(sent[0])) for sent in X], dtype=np.int32)
         X_fourgram = np.asarray([sent[1][:mlen]  + [-1]*(mlen-len(sent[1])) for sent in X], dtype=np.int32)
         X_words = np.asarray([sent[2][:mlen_sent]  + [-1]*(mlen_sent-len(sent[2])) for sent in X], dtype=np.int32)
-        X = np.hstack([X_trigram, X_fourgram, X_words])
         if self.use_bow:
-            X_onehot = np.zeros((X.shape[0], 140000), dtype=np.float32)
+            X_onehot = np.zeros((X_trigram.shape[0], 30000), dtype=np.int32)
             for idx, sent in enumerate(X):
-                for word_id in sent:
+                for word_id in sent[0]:
                     if word_id == -1:
                         break
                     X_onehot[idx, word_id] += 1
-
+            X = np.hstack([X_trigram, X_fourgram, X_words, X_onehot])
             X = np.asarray(X, dtype=np.float32)
-            X = np.hstack([X, X_onehot])
+        else:
+            X = np.hstack([X_trigram, X_fourgram, X_words])
         #
         # X = X_onehot
         # X = [[word[:mlen_word] + [-1]*(mlen_word-len(word)) for word in sent] for sent in X]
