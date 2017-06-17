@@ -4,6 +4,7 @@ import os.path
 import random
 import argparse
 from collections import namedtuple
+import time
 
 import numpy as np
 
@@ -115,7 +116,7 @@ def main():
             if idx is not None:
                 glove_idxs.add(idx)
                 glove[idx,:] = np.fromstring(vector, sep=' ')
-    print('Loaded %d vectors from GloVe file' % len(glove_idxs))
+    print('Loaded %d vectors from GloVe file' % len(glove_idxs), flush=True)
 
     model = MaxLSTMClassifier(
             len(vocab), len(pos_vocab), glove_dims, pos_embedding_size,
@@ -143,8 +144,10 @@ def main():
     optimizer.add_hook(chainer.optimizer.GradientClipping(5.0))
 
     n_batches = 0
+    best_dev_loss = float('inf')
 
     while True:
+        t0 = time.time()
         batch_essays = random.sample(train_essays, batch_size)
         batch_token, batch_pos = list(zip(*map(encode_essay, batch_essays)))
         target = xp.array(
@@ -152,14 +155,13 @@ def main():
                 dtype=xp.int32)
         pred = model(batch_token, batch_pos)
         loss = F.softmax_cross_entropy(pred, target)
-        print('TRAIN', cuda.to_cpu(loss.data))
         model.cleargrads()
         loss.backward()
         optimizer.update()
-
-        best_dev_loss = float('inf')
+        print('TRAIN', cuda.to_cpu(loss.data), time.time()-t0, flush=True)
 
         if n_batches % 1000 == 0:
+            t0 = time.time()
             dev_loss = 0.0
             dev_pred = []
             dev_target = []
@@ -180,13 +182,13 @@ def main():
                     dev_pred.extend(
                             np.argmax(cuda.to_cpu(pred.data), axis=-1).tolist())
 
-            print('DEV', dev_loss, n_batches)
+            print('DEV', dev_loss, n_batches, time.time()-t0, flush=True)
             if dev_loss < best_dev_loss:
                 best_dev_loss = dev_loss
                 serializers.save_npz(args.model + '.npz', model)
                 with open(args.model + '.metadata', 'wb') as f:
                     pickle.dump((args, vocab, pos_vocab, lang_vocab), f, -1)
-                print('SAVE', n_batches)
+                print('SAVE', n_batches, flush=True)
 
             confusion = np.zeros((len(lang_vocab),)*2, dtype=np.int32)
             for x,y in zip(dev_pred, dev_target):
@@ -194,8 +196,9 @@ def main():
             print('ACC',
                     sum(x==y for x,y in zip(dev_pred, dev_target))/
                     len(dev_target),
-                    n_batches)
-            print(confusion)
+                    n_batches,
+                    flush=True)
+            print(confusion, flush=True)
         n_batches += 1
 
 
