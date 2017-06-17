@@ -50,6 +50,8 @@ def main():
     parser.add_argument(
             '--lstm-size', type=int, metavar='N', default=256,
             help='number of LSTM units (per direction)')
+    parser.add_argument(
+            '--dropout-sentences', type=float, metavar='X', default=0.5)
     args = parser.parse_args()
 
 
@@ -61,6 +63,7 @@ def main():
     pos_embedding_size = args.pos_embeddings_size
     state_size = args.lstm_size
     limit_dev = args.limit_dev
+    dropout_sentences = args.dropout_sentences
 
     with open(glove_file) as f:
         glove_vocab = {line.split(' ', 1)[0] for line in f}
@@ -125,17 +128,24 @@ def main():
     if gpu >= 0: model.to_gpu(gpu)
     xp = model.xp
 
-    def encode_essay(essay):
+    def encode_essay(essay, dropout_sentences=0):
+        sents = essay.sents
+        if dropout_sentences:
+            n_sents = round(dropout_sentences * len(sents))
+            if n_sents >= 1:
+                sents = list(sents)
+                random.shuffle(sents)
+                sents = sents[:n_sents]
         unk = vocab_index['<UNK>']
         sents_token = [
                 xp.array([vocab_index.get(token, unk)
                           for token,lemma,tag in sent],
                          dtype=xp.int32)
-                for sent in essay.sents]
+                for sent in sents]
         sents_pos = [
                 xp.array([pos_vocab_index[tag] for token,lemma,tag in sent],
                          dtype=xp.int32)
-                for sent in essay.sents]
+                for sent in sents]
         return sents_token, sents_pos
 
     optimizer = chainer.optimizers.Adam()
@@ -149,7 +159,9 @@ def main():
     while True:
         t0 = time.time()
         batch_essays = random.sample(train_essays, batch_size)
-        batch_token, batch_pos = list(zip(*map(encode_essay, batch_essays)))
+        batch_pairs = [encode_essay(essay, dropout_sentences=dropout_sentences)
+                       for essay in batch_essays]
+        batch_token, batch_pos = list(zip(*batch_pairs))
         target = xp.array(
                 [lang_vocab_index[essay.label.L1] for essay in batch_essays],
                 dtype=xp.int32)
