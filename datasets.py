@@ -46,12 +46,17 @@ def read_nli(data_dir, fold, char_to_id, label_to_id, word_to_id, pos_to_id, max
     word_to_id['</S>']
 
     train_label_path = os.path.join(data_dir, 'labels', fold, 'labels.{0}.csv'.format(fold))
+    if fold == 'test':
+        train_label_path = os.path.join(data_dir, 'labels', fold, 'essay.labels.{0}.csv'.format(fold))
     labels = {}
     with open(train_label_path, 'r') as in_f:
         in_f.readline() # skip csv header
         for line in in_f:
             fields = line.strip().split(',')
-            entry_id, native_lang = fields[0], fields[3]
+            if fold == 'test':
+                entry_id, native_lang = fields[0], fields[2]
+            else:
+                entry_id, native_lang = fields[0], fields[3]
             if subset == 1 and native_lang not in ['FRE', 'JPN', 'TUR']: continue
             if subset == 2 and native_lang not in ['TEL', 'HIN']: continue
             labels[entry_id] = label_to_id[native_lang]
@@ -138,13 +143,15 @@ def read_nli(data_dir, fold, char_to_id, label_to_id, word_to_id, pos_to_id, max
 
     print('{0} chars in longest sent'.format(longest_sent))#len(char_to_id))
     X, y = [], []
+    y_ids = []
     for key, entry in sorted(sents.items(), key=lambda x: -len(x[1])):
         #if labels[key] not in [10, 8]: continue
         for sent in entry:
             X.append(sent)
             y.append(labels[key])
+            y_ids.append(key)
 
-    return X, y
+    return X, y, y_ids
 
 
 def pad_dataset(dataset, maxlen):
@@ -177,7 +184,8 @@ class IMDBDataset(dataset_mixin.DatasetMixin):
 
 class NLIDataset(SerialIterator):
     def __init__(self, path, fold, char_to_id, label_to_id, word_to_id, pos_to_id, maxlen=128, batch_size=1, repeat=True, shuffle=True, subset=False, use_bow=False):
-        X, y = read_nli(path, fold, char_to_id, label_to_id, word_to_id, pos_to_id,  maxlen=maxlen, subset=subset)
+        X, y, y_ids = read_nli(path, fold, char_to_id, label_to_id, word_to_id, pos_to_id,  maxlen=maxlen, subset=subset)
+        self.ids = y_ids
         print('{0} instances in {1}'.format(len(X), fold))
         #print('longest sentence is {0} chars'.format(max(map(len, X))))
         self.dataset = list(zip(X, y))#pad_dataset(X, maxlen)

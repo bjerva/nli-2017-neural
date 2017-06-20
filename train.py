@@ -58,9 +58,10 @@ class RNNModel(chainer.Chain):
         return self.fc(h)
 
 class CNNModel(chainer.Chain):
-    def __init__(self, vocab_size, n_labels, word_vocab_size, n_pos, out_size, dropout):
-        sent_len = args.maxlen
-        out_channels = int(args.maxlen*2)
+    def __init__(self, vocab_size, n_labels, word_vocab_size, n_pos, out_size, dropout, args):
+        self.args = args
+        sent_len = 4096#args.maxlen
+        out_channels = int(sent_len*2)
         super().__init__(
             embed_tri=L.EmbedID(vocab_size[0], out_size, ignore_label=-1),
             embed_four=L.EmbedID(vocab_size[1], out_size, ignore_label=-1),
@@ -199,9 +200,9 @@ class CNNModel(chainer.Chain):
         prev_h = h
 
         #### Block 1 ####
-        if args.bn:
+        if self.args.bn:
             h = self.bn1(h)
-        if args.activation:
+        if self.args.activation:
             h = F.relu(h)
         #h = F.dropout(h, self.dropout)
         if self.first:
@@ -213,9 +214,9 @@ class CNNModel(chainer.Chain):
 
         h = F.dropout(h, self.dropout)
 
-        if args.bn:
+        if self.args.bn:
             h = self.bn2(h)
-        if args.activation:
+        if self.args.activation:
             h = F.relu(h)
         h = self.conv2(h)
         if self.first:
@@ -232,9 +233,9 @@ class CNNModel(chainer.Chain):
             print('rn1', h.data.shape)
 
         #### Block 2 ####
-        if args.bn:
+        if self.args.bn:
             h = self.bn3(h)
-        if args.activation:
+        if self.args.activation:
             h = F.relu(h)
         h = self.conv3(h)
         if self.first:
@@ -242,9 +243,9 @@ class CNNModel(chainer.Chain):
 
         h = F.dropout(h, self.dropout)
 
-        if args.bn:
+        if self.args.bn:
             h = self.bn4(h)
-        if args.activation:
+        if self.args.activation:
             h = F.relu(h)
         h = self.conv4(h)
         if self.first:
@@ -261,9 +262,9 @@ class CNNModel(chainer.Chain):
             print('rn2', h.data.shape)
 
         #### Block 3 ####
-        if args.bn:
+        if self.args.bn:
             h = self.bn5(h)
-        if args.activation:
+        if self.args.activation:
             h = F.relu(h)
         h = self.conv5(h)
         if self.first:
@@ -271,9 +272,9 @@ class CNNModel(chainer.Chain):
 
         h = F.dropout(h, self.dropout)
 
-        if args.bn:
+        if self.args.bn:
             h = self.bn6(h)
-        if args.activation:
+        if self.args.activation:
             h = F.relu(h)
         h = self.conv6(h)
         if self.first:
@@ -291,9 +292,9 @@ class CNNModel(chainer.Chain):
 
 
         #### Block 4 ####
-        if args.bn:
+        if self.args.bn:
             h = self.bn7(h)
-        if args.activation:
+        if self.args.activation:
             h = F.relu(h)
         h = self.conv7(h)
         if self.first:
@@ -301,9 +302,9 @@ class CNNModel(chainer.Chain):
 
         h = F.dropout(h, self.dropout)
 
-        if args.bn:
+        if self.args.bn:
             h = self.bn8(h)
-        if args.activation:
+        if self.args.activation:
             h = F.relu(h)
         h = self.conv8(h)
         if self.first:
@@ -330,9 +331,9 @@ class CNNModel(chainer.Chain):
         prev_h = h
 
         #### Block 1 ####
-        if args.bn:
+        if self.args.bn:
             h = self.bn1_b(h)
-        if args.activation:
+        if self.args.activation:
             h = F.relu(h)
         #h = F.dropout(h, self.dropout)
         if self.first:
@@ -344,9 +345,9 @@ class CNNModel(chainer.Chain):
 
         h = F.dropout(h, self.dropout)
 
-        if args.bn:
+        if self.args.bn:
             h = self.bn2_b(h)
-        if args.activation:
+        if self.args.activation:
             h = F.relu(h)
         h = self.conv2_b(h)
         if self.first:
@@ -363,9 +364,9 @@ class CNNModel(chainer.Chain):
             print('rn1', h.data.shape)
 
         #### Block 2 ####
-        if args.bn:
+        if self.args.bn:
             h = self.bn3_b(h)
-        if args.activation:
+        if self.args.activation:
             h = F.relu(h)
         h = self.conv3_b(h)
         if self.first:
@@ -373,9 +374,9 @@ class CNNModel(chainer.Chain):
 
         h = F.dropout(h, self.dropout)
 
-        if args.bn:
+        if self.args.bn:
             h = self.bn4_b(h)
-        if args.activation:
+        if self.args.activation:
             h = F.relu(h)
         h = self.conv4_b(h)
         if self.first:
@@ -393,9 +394,9 @@ class CNNModel(chainer.Chain):
 
 
         #### Block 3 ####
-        if args.bn:
+        if self.args.bn:
             h = self.bn5_b(h)
-        if args.activation:
+        if self.args.activation:
             h = F.relu(h)
         h = self.conv5_b(h)
         if self.first:
@@ -403,9 +404,9 @@ class CNNModel(chainer.Chain):
 
         h = F.dropout(h, self.dropout)
 
-        if args.bn:
+        if self.args.bn:
             h = self.bn6_b(h)
-        if args.activation:
+        if self.args.activation:
             h = F.relu(h)
         h = self.conv6_b(h)
         if self.first:
@@ -423,9 +424,9 @@ class CNNModel(chainer.Chain):
 
 
         #### Block 4 ####
-        if args.bn:
+        if self.args.bn:
             h = self.bn7_b(h)
-        if args.activation:
+        if self.args.activation:
             h = F.relu(h)
         h = self.conv7_b(h)
         if self.first:
@@ -433,9 +434,9 @@ class CNNModel(chainer.Chain):
 
         h = F.dropout(h, self.dropout)
 
-        if args.bn:
+        if self.args.bn:
             h = self.bn8_b(h)
-        if args.activation:
+        if self.args.activation:
             h = F.relu(h)
         h = self.conv8_b(h)
         if self.first:
@@ -461,9 +462,9 @@ class CNNModel(chainer.Chain):
         prev_h = h
 
         #### Block 1 ####
-        if args.bn:
+        if self.args.bn:
             h = self.bn1_w(h)
-        if args.activation:
+        if self.args.activation:
             h = F.relu(h)
         #h = F.dropout(h, self.dropout)
         if self.first:
@@ -475,9 +476,9 @@ class CNNModel(chainer.Chain):
 
         h = F.dropout(h, self.dropout+0.1)
 
-        if args.bn:
+        if self.args.bn:
             h = self.bn2_w(h)
-        if args.activation:
+        if self.args.activation:
             h = F.relu(h)
         h = self.conv2_w(h)
         if self.first:
@@ -497,9 +498,9 @@ class CNNModel(chainer.Chain):
         prev_h = h
 
         #### Block 2 ####
-        if args.bn:
+        if self.args.bn:
             h = self.bn3_w(h)
-        if args.activation:
+        if self.args.activation:
             h = F.relu(h)
         h = self.conv3_w(h)
         if self.first:
@@ -507,9 +508,9 @@ class CNNModel(chainer.Chain):
 
         h = F.dropout(h, self.dropout)
 
-        if args.bn:
+        if self.args.bn:
             h = self.bn4_w(h)
-        if args.activation:
+        if self.args.activation:
             h = F.relu(h)
         h = self.conv4_w(h)
         if self.first:
@@ -539,9 +540,9 @@ class CNNModel(chainer.Chain):
         prev_h = h
 
         #### Block 1 ####
-        if args.bn:
+        if self.args.bn:
             h = self.bn1_p(h)
-        if args.activation:
+        if self.args.activation:
             h = F.relu(h)
         #h = F.dropout(h, self.dropout)
         if self.first:
@@ -553,9 +554,9 @@ class CNNModel(chainer.Chain):
 
         h = F.dropout(h, self.dropout+0.1)
 
-        if args.bn:
+        if self.args.bn:
             h = self.bn2_p(h)
-        if args.activation:
+        if self.args.activation:
             h = F.relu(h)
         h = self.conv2_p(h)
         if self.first:
@@ -575,9 +576,9 @@ class CNNModel(chainer.Chain):
         prev_h = h
 
         #### Block 2 ####
-        if args.bn:
+        if self.args.bn:
             h = self.bn3_p(h)
-        if args.activation:
+        if self.args.activation:
             h = F.relu(h)
         h = self.conv3_p(h)
         if self.first:
@@ -585,9 +586,9 @@ class CNNModel(chainer.Chain):
 
         h = F.dropout(h, self.dropout)
 
-        if args.bn:
+        if self.args.bn:
             h = self.bn4_p(h)
-        if args.activation:
+        if self.args.activation:
             h = F.relu(h)
         h = self.conv4_p(h)
         if self.first:
@@ -614,13 +615,13 @@ class CNNModel(chainer.Chain):
 
 
     def __call__(self, x):
-        if args.use_bow:
-            x_bow = x[:,2048+8192:]
-            x = x[:,:2048+8192]
+        if self.args.use_bow:
+            x_bow = x[:,1024+8192:]
+            x = x[:,:1024+8192]
             x = F.cast(x, np.int32)
 
         hs = []
-        if args.use_tri:
+        if self.args.use_tri:
             x_tri = x[:,:4096]
             h = self.embed_tri(x_tri)
             if self.first:
@@ -631,7 +632,7 @@ class CNNModel(chainer.Chain):
             h_tri = self.call_trinet(h)
             hs.append(h_tri)
 
-        if args.use_four:
+        if self.args.use_four:
             x_four = x[:,4096:8192]
             h = self.embed_four(x_four)
             if self.first:
@@ -642,7 +643,7 @@ class CNNModel(chainer.Chain):
             h_four = self.call_fournet(h)
             hs.append(h_four)
 
-        if args.use_words:
+        if self.args.use_words:
             x_words = x[:,8192:8192+1024]
             h = self.embed_word(x_words)
             h = F.swapaxes(h, 1, 2)
@@ -650,13 +651,13 @@ class CNNModel(chainer.Chain):
             h_words = self.call_wordnet(h)
             hs.append(h_words)
 
-        if args.use_pos:
-            x_pos = x[:,1024+8192:8192+2048]
-            h = self.embed_pos(x_pos)
-            h = F.swapaxes(h, 1, 2)
-            h = F.dropout(h, self.dropout+0.1)
-            h_pos = self.call_posnet(h)
-            hs.append(h_pos)
+        # if self.args.use_pos:
+        #     x_pos = x[:,1024+8192:8192+2048]
+        #     h = self.embed_pos(x_pos)
+        #     h = F.swapaxes(h, 1, 2)
+        #     h = F.dropout(h, self.dropout+0.1)
+        #     h_pos = self.call_posnet(h)
+        #     hs.append(h_pos)
 
         if len(hs) > 1:
             h = F.concat(hs)
@@ -687,7 +688,7 @@ class CNNModel(chainer.Chain):
         if self.first:
             print('fc6', h.data.shape)
 
-        if args.use_bow:
+        if self.args.use_bow:
             h_bows = self.call_bow(x_bow)
             h = F.concat((h, h_bows))
             if self.first:
