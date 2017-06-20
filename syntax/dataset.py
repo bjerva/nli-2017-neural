@@ -6,18 +6,30 @@ LabelItem = namedtuple('LabelItem',
         ['test_taker_id', 'speech_prompt', 'essay_prompt', 'L1'])
 
 class NLIDataset:
-    def __init__(self, path):
+    def __init__(self, path, parts=['dev', 'train']):
         self.path = path
         self.labels = {}
-        for part in ['dev', 'train']:
+        for part in parts:
             self.read_part(part)
 
     def read_part(self, part):
-        label_file = os.path.join(
-                self.path, 'data', 'labels', part, 'labels.%s.csv' % part)
-        with open(label_file, 'r') as f:
-            next(f)
-            labels = [LabelItem(*line.rstrip('\n').split(',')) for line in f]
+        if part == 'test':
+            label_file = os.path.join(
+                    self.path, 'data', 'labels',
+                    part, 'essay.labels.%s.csv' % part)
+            with open(label_file, 'r') as f:
+                next(f)
+                lines = [line.rstrip('\n').split(',') for line in f]
+                labels = [LabelItem(test_taker_id, 'X', essay_prompt, l1)
+                          for test_taker_id, essay_prompt, l1 in lines]
+        else:
+            label_file = os.path.join(
+                    self.path, 'data', 'labels', part, 'labels.%s.csv' % part)
+            with open(label_file, 'r') as f:
+                next(f)
+                labels = [LabelItem(*line.rstrip('\n').split(','))
+                          for line in f]
+
         self.labels[part] = {label.test_taker_id: label for label in labels}
 
     def essay_path(self, part, processing='original'):

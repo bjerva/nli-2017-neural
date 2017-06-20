@@ -27,6 +27,9 @@ def main():
             '--data-path', type=str, metavar='FILE', required=True,
             help='path to nli-shared-task-2017 directory')
     parser.add_argument(
+            '--test-path', type=str, metavar='FILE',
+            help='path to nli-test-set_phase1_2017 directory')
+    parser.add_argument(
             '--embeddings', type=str, metavar='FILE', required=True,
             help='path to GloVe file (uncompressed)')
     parser.add_argument(
@@ -52,10 +55,18 @@ def main():
             help='number of LSTM units (per direction)')
     parser.add_argument(
             '--dropout-sentences', type=float, metavar='X', default=0.5)
+    parser.add_argument(
+            '--dropout-tokens', type=float, metavar='X', default=0.3)
+    parser.add_argument(
+            '--dropout', type=float, metavar='X', default=0.2)
     args = parser.parse_args()
 
 
-    dataset = NLIDataset(args.data_path)
+    trainset = NLIDataset(args.data_path, ['dev', 'train'])
+    if args.test_path:
+        testset = NLIDataset(args.test_path, ['test'])
+    else:
+        testset = None
     glove_file = args.embeddings
     glove_dims = args.embeddings_size
     batch_size = args.batch_size
@@ -64,11 +75,13 @@ def main():
     state_size = args.lstm_size
     limit_dev = args.limit_dev
     dropout_sentences = args.dropout_sentences
+    dropout_tokens = args.dropout_tokens
 
     with open(glove_file) as f:
         glove_vocab = {line.split(' ', 1)[0] for line in f}
 
     def get_data(part):
+        dataset = testset if part == 'test' else trainset
         return [
             Essay(
                 label,
@@ -89,11 +102,14 @@ def main():
                 pickle.dump(data, f, -1)
             return data
 
-    # TODO: would prefer test vocabulary in here as well, for simplicity
     dev_essays = load_cached('dev')
     train_essays = load_cached('train')
+    if testset:
+        test_essays = load_cached('test')
+    else:
+        test_essays = []
 
-    vocab = {token for essay in train_essays + dev_essays
+    vocab = {token for essay in train_essays + dev_essays + test_essays
                    for sent in essay.sents
                    for token,lemma,tag in sent}
 
@@ -101,7 +117,7 @@ def main():
     vocab_index = {s:i for i,s in enumerate(vocab)}
 
     pos_vocab = sorted({
-        tag for essay in train_essays + dev_essays
+        tag for essay in train_essays + dev_essays + test_essays
             for sent in essay.sents
             for token,lemma,tag in sent})
     pos_vocab_index = {s:i for i,s in enumerate(pos_vocab)}
@@ -124,11 +140,15 @@ def main():
     model = MaxLSTMClassifier(
             len(vocab), len(pos_vocab), glove_dims, pos_embedding_size,
             state_size, len(lang_vocab),
-            embeddings=glove)
+            embeddings=glove, dropout=args.dropout)
+
+    # Freeze vocabulary embeddings
+    model.embeddings.disable_update()
+
     if gpu >= 0: model.to_gpu(gpu)
     xp = model.xp
 
-    def encode_essay(essay, dropout_sentences=0):
+    def encode_essay(essay, dropout_sentences=0, dropout_tokens=0):
         sents = essay.sents
         if dropout_sentences:
             n_sents = round(dropout_sentences * len(sents))
@@ -146,6 +166,13 @@ def main():
                 xp.array([pos_vocab_index[tag] for token,lemma,tag in sent],
                          dtype=xp.int32)
                 for sent in sents]
+        if dropout_tokens:
+            def remove_symbols(x):
+                mask = np.random.random(len(x)) < dropout_tokens
+                mask = xp.array(mask.astype(np.int32))
+                return x*(1-mask) - mask
+            sents_token = [remove_symbols(x) for x in sents_token]
+            senst_pos = [remove_symbols(x) for x in sents_pos]
         return sents_token, sents_pos
 
     optimizer = chainer.optimizers.Adam()
@@ -172,28 +199,37 @@ def main():
         optimizer.update()
         print('TRAIN', cuda.to_cpu(loss.data), time.time()-t0, flush=True)
 
-        if n_batches % 1000 == 0:
+        if n_batches % 200 == 0:
             t0 = time.time()
             dev_loss = 0.0
             dev_pred = []
             dev_target = []
+            dev_result = {}
             with chainer.using_config('train', False):
-                n_dev_essays = limit_dev if limit_dev else len(dev_essays)
-                for i in range(0, n_dev_essays, batch_size):
-                    batch_essays = dev_essays[i:i+batch_size]
-                    batch_token, batch_pos = list(zip(*map(
-                        encode_essay, batch_essays)))
-                    target = xp.array(
-                            [lang_vocab_index[essay.label.L1]
-                             for essay in batch_essays],
-                            dtype=xp.int32)
-                    pred = model(batch_token, batch_pos)
-                    loss = F.softmax_cross_entropy(pred, target)
-                    dev_loss += cuda.to_cpu(loss.data)
-                    dev_target.extend(cuda.to_cpu(target).tolist())
-                    dev_pred.extend(
-                            np.argmax(cuda.to_cpu(pred.data), axis=-1).tolist())
-
+                with chainer.using_config('enable_backprop', False):
+                    n_dev_essays = limit_dev if limit_dev else len(dev_essays)
+                    for i in range(0, n_dev_essays, batch_size):
+                        batch_essays = dev_essays[i:i+batch_size]
+                        batch_token, batch_pos = list(zip(*map(
+                            encode_essay, batch_essays)))
+                        target = xp.array(
+                                [lang_vocab_index[essay.label.L1]
+                                 for essay in batch_essays],
+                                dtype=xp.int32)
+                        pred = model(batch_token, batch_pos)
+                        loss = F.softmax_cross_entropy(pred, target)
+                        dev_loss += cuda.to_cpu(loss.data)
+                        dev_target.extend(cuda.to_cpu(target).tolist())
+                        dev_pred.extend(
+                                np.argmax(cuda.to_cpu(pred.data),
+                                    axis=-1).tolist())
+                        pred = F.softmax(pred)
+                        pred = cuda.to_cpu(pred.data)
+                        for essay, ps in zip(batch_essays, pred):
+                            dev_result[essay.label.test_taker_id] = {
+                                    l1: float(p)
+                                    for l1, p in zip(lang_vocab, ps)}
+ 
             print('DEV', dev_loss, n_batches, time.time()-t0, flush=True)
             if dev_loss < best_dev_loss:
                 best_dev_loss = dev_loss
@@ -201,6 +237,24 @@ def main():
                 with open(args.model + '.metadata', 'wb') as f:
                     pickle.dump((args, vocab, pos_vocab, lang_vocab), f, -1)
                 print('SAVE', n_batches, flush=True)
+
+                test_result = {}
+                with chainer.using_config('train', False):
+                    with chainer.using_config('enable_backprop', False):
+                        for i in range(0, len(test_essays), batch_size):
+                            batch_essays = test_essays[i:i+batch_size]
+                            batch_token, batch_pos = list(zip(*map(
+                                encode_essay, batch_essays)))
+                            pred = F.softmax(model(batch_token, batch_pos))
+                            pred = cuda.to_cpu(pred.data)
+                            for essay, ps in zip(batch_essays, pred):
+                                test_result[essay.label.test_taker_id] = {
+                                        l1: float(p)
+                                        for l1, p in zip(lang_vocab, ps)}
+                with open(args.model + '.predictions.test', 'wb') as f:
+                    pickle.dump(test_result, f, -1)
+                with open(args.model + '.predictions.dev', 'wb') as f:
+                    pickle.dump(dev_result, f, -1)
 
             confusion = np.zeros((len(lang_vocab),)*2, dtype=np.int32)
             for x,y in zip(dev_pred, dev_target):
@@ -211,6 +265,7 @@ def main():
                     n_batches,
                     flush=True)
             print(confusion, flush=True)
+
         n_batches += 1
 
 
