@@ -72,16 +72,27 @@ class NLIDataset:
 if __name__ == '__main__':
     import sys
     import numpy as np
+    import pickle
 
     dataset = NLIDataset(sys.argv[1])
-    l1_lengths = defaultdict(list)
-    l1_prompt_lengths = defaultdict(list)
-    for label in dataset.labels['train'].values():
-        with open(dataset.essay_filename('train', label.test_taker_id)) as f:
-            length = len(f.read())
-            l1_lengths[label.L1].append(length)
-            #l1_prompt_lengths[(label.L1, label.essay_prompt)].append(length)
+    with open(sys.argv[2], 'rb') as f:
+        system_output = pickle.load(f)
 
-    for l1, lengths in sorted(l1_lengths.items()):
-        print(l1, np.mean(lengths), np.median(lengths), np.std(lengths))
+    labels = list(dataset.labels['dev'].values())
+    n_correct = sum(label.L1 == max(system_output[label.test_taker_id].items(),
+                                    key=lambda t: t[1])[0]
+                    for label in labels)
+    print('Accuracy: %.3f%% (%d/%d)' % (
+        n_correct/len(labels), n_correct, len(labels)))
+
+    #l1_lengths = defaultdict(list)
+    #l1_prompt_lengths = defaultdict(list)
+    #for label in dataset.labels['train'].values():
+    #    with open(dataset.essay_filename('train', label.test_taker_id)) as f:
+    #        length = len(f.read())
+    #        l1_lengths[label.L1].append(length)
+    #        #l1_prompt_lengths[(label.L1, label.essay_prompt)].append(length)
+
+    #for l1, lengths in sorted(l1_lengths.items()):
+    #    print(l1, np.mean(lengths), np.median(lengths), np.std(lengths))
 
