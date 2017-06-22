@@ -78,8 +78,8 @@ if __name__ == '__main__':
     with open(sys.argv[2], 'rb') as f:
         system_output = pickle.load(f)
 
-    labels = list(set(dataset.labels['dev'].values()) &
-                  set(system_output.keys()))
+    labels = [label for label in dataset.labels['dev'].values()
+              if label.test_taker_id in system_output]
     n_correct = sum(label.L1 == max(system_output[label.test_taker_id].items(),
                                     key=lambda t: t[1])[0]
                     for label in labels)
