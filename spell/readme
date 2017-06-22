@@ -1,0 +1,58 @@
+# documentation for spelling correction based classifier
+# June 22, by G.G.
+
+
+TRAINING and extracting features
+
+to get the misspelled words (.err files), their correction (.cor files)
+suggestions, features (.cor.feat files), place myaspell.sh, my_spell.sh and
+extracting_spellfeatures.py into dir where .txt files are. Run these 3
+commands
+
+sh myaspell.sh
+
+sh my_spell.sh
+
+python3 extracting_spellfeatures.py labels.train.csv *.cor
+-where labels.train.csv is a mapping needed to produce the Y vector of
+correspond labels to matrix X.
+
+
+# for extracting features for test set , do the same, but use diff label
+# mapping, e.g. python3 extracting_spellfeatures.py essay.labels.test.csv
+# *.cor
+# it will produce all files, like for training, but we will be using only
+# .cor.feat files
+
+
+ This will generate .err, .cor, .cor.feat files and the following model files
+ (4):
+ document_label_Y.file
+ document_Y.file
+ matrix_X.file
+ feature_names.file
+ - stored under /home/gintare/nli/experiment/copy_trained_model
+
+ to interpret feature matrix: row titles are document_label_Y.file; column
+ titles are feature_names.file
+
+ TESTING
+
+ to run the classifier place 4 model files where .cor.feat files are (dev or
+ test directory) and run:
+
+ python3 classify_by_errors.py *.cor.feat
+
+ it will produce test_run_spell_errors.results pickle file
+
+ current setting for test is under:
+ /home/gintare/nli/experiment/test_features/test/original
+ current setting for dev is under:
+ /home/gintare/nli/experiment/dev_features
+
+ RESULTS
+
+ copied and renamed under:
+ /home/gintare/nli/experiment/results
+
+
