@@ -80,7 +80,11 @@ We used resnets \citep{He2016identity}.
 \todo[inline]{Barbara, please describe this}
 
 \subsection{Ensemble}
-\todo[inline]{Johannes, please describe this}
+The systems are combined into an ensemble, consisting of a linear SVM.
+We use the probability distributions over the labels, as output by each system, as features for the SVM.
+The ensemble is trained and tuned on a random subset of the development set ($70/30$ split).
+For the selection of systems to include in the ensemble, we use the combination of systems resulting in the highest mean accuracy over five such random splits.
+
 
 \section{Results}
 
