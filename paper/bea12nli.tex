@@ -60,7 +60,10 @@
 
 \section{Introduction}
 
-NLI task description \citep{nli2017}.
+Native Language Identification (NLI) is the task of identifying the native language of, e.g., the writer of an English text.
+In this paper, we describe the University of Groningen / Stockholm University (RUG-SU) submission to the 2017 NLI shared task \citep{nli2017}.
+
+We combine several approaches into an ensemble, based on spelling error features, a simple neural network using word representations, a deep residual network using word and character features, and a system based on a recurrent neural network.
 
 \section{Related Work}
 
@@ -83,10 +86,14 @@ The NLI 2017 shared task attempts to combine these approaches by including a wri
 You can also discuss how your system relates to other work in this area. For example, you can compare your approach to the previous state of the art NLI systems: \cite{malmasi:2017:nlisg}, \cite{ionescu:2014}, \cite{bykh:2014} and \cite{jarvis-bestgen-pepper:2013:BEA8}.
 This will help position your work within the context of the field and how your work relates to previous approaches, so it is important to do this.
 
-\section{Data}
+\section{External data}
+\subsection{LSTM system}
+\todo[inline]{Robert, please describe the data you used}
+
+\subsection{Spelling features}
+\todo[inline]{Gintare, please describe the data you used}
 
 \section{Systems}
-
 \subsection{Deep Residual Networks}
 \todo[inline]{Johannes, please describe this}
 
@@ -146,25 +153,21 @@ The results for the open track are lower than those in the closed track (Table~\
 \end{tabular}
 \end{table*}
 
-% 1	open_ensemble_1_test.zip	06/20/2017 15:36:16	Finished
-% 2	open_ensemble_lstm_cnn2_test.zip	06/21/2017 08:05:21	Finished
-% 3	open_ensemble_cbow_cnn2_lstm_spell_test.zip	06/21/2017 14:43:32	Finished
-% 4	open_ensemble_cbow_cnn2_spell_test.zip	06/21/2017 14:43:38	Finished
-% 5	open_ensemble_cbow_cnn3_spell2_test.zip	06/21/2017 20:35:11	Finished
-% 6	open_ensemble_cbow_cnn3_lstm_test.zip
-
 The official evaluation metric for the task is the F1 (macro) score.
 The test data was evenly distributed across each class.
 
 \begin{figure*}
 \centering
-\includegraphics[width=0.7\textwidth]{ESSAY_track,_closed_training,_bjerva_06.pdf}
+\includegraphics[width=0.7\textwidth]{closed_confusion_run06.pdf}
 %TODO : add your own details to the caption for this figure
 \caption{ESSAY track, closed training, bjerva 06 (ADD YOUR OWN DETAILS HERE)}
 \label{fig:1}
 \end{figure*}
 
 \section{Analysis}
+
+The ensemble seems to have overfit on the dev in most cases.
+
 
 \section{Discussion}
 
