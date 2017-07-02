@@ -69,9 +69,25 @@ We used resnets \citep{He2016identity}.
 \subsection{CNN}
 \todo[inline]{Johannes, please describe this}
 
-\subsection{LSTM clf w/pretraining}
-\todo[inline]{Robert, please describe this}
+\subsection{Syntactic submodel}
+In order to easier capture general syntactic patterns, we use a sentence-level
+bidirectional LSTM over tokens and their corresponding part of speech tags
+from the Stanford CoreNLP toolkit \citep{Manning2014corenlp}.  PoS tags are
+represented by
+64-dimensional embeddings, initialized randomly;  word tokens by
+300-dimensional embeddings, initialized with GloVe \citep{Pennington2014glove}
+embeddings trained on 840 billion words of English web data from the Common
+Crawl project.\footnote{ Available at
+\url{https://nlp.stanford.edu/projects/glove/}}
 
+To reduce overfitting, we perform training by choosing a random subset of 50\%
+of the sentenecs in an essay, concatenating their PoS tag and token
+embeddings, and running the resulting vector sequence through a bidirectional
+LSTM layer with 256 units per direction. We then average the final output
+vector of the LSTM over all the selected sentences from the essay, pass it
+through a hidden layer with 1024 units and rectified linear activations, then
+make the final predictions through a linear layer with softmax activations.
+We apply dropout (50\%) on the final hidden layer.
 
 \subsection{Spelling features}
 \todo[inline]{Gintare, please describe this}
