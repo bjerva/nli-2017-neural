@@ -151,18 +151,18 @@ The results for the open track are lower than those in the closed track (Table~\
 \label{tab:results}
 \begin{tabular}{llrr}
 \toprule
-\bf Condition & \bf System & \bf F1 (macro) & \bf Accuracy \\
+\bf Track & \bf System & \bf F1 (macro) & \bf Accuracy \\
 \midrule
 & Random Baseline & 0.0909 & 0.0909 \\
 \midrule
-\multirow{6}{*}{Closed Track} & 01 -- Resnet ($w_1$+$c_5$) & 0.8016 & 0.8027 \\
+\multirow{6}{*}{Closed} & 01 -- Resnet ($w_1$+$c_5$) & 0.8016 & 0.8027 \\
 & 02 -- Resnet ($w_1$+$c_5$) & 0.7776 & 0.7782 \\
 & 03 -- Ensemble (Resnet ($w_1$+$c_5$), Resnet ($c_4$)) & 0.7969 & 0.7964 \\
 & 04 -- Ensemble (Resnet ($w_1$+$c_5$), Resnet ($c_6$), Resnet ($c_4$), Resnet ($c_3$)) & 0.8023 & 0.8018 \\
 & 05 -- Ensemble (Resnet ($w_1$+$c_5$), Resnet ($c_6$), Resnet ($c_4$), CBOW) & 0.8149 & 0.8145 \\
 & 06 -- Ensemble (Resnet ($w_1$+$c_5$), Resnet ($c_6$), MLP, CBOW) & \bf 0.8323 & \bf 0.8318 \\
 \midrule
-\multirow{6}{*}{Open Track} & 01 -- Ensemble (LSTM, Resnet ($w_1$+$c_5$)) & \bf 0.8191 & \bf 0.8186 \\
+\multirow{6}{*}{Open} & 01 -- Ensemble (LSTM, Resnet ($w_1$+$c_5$)) & \bf 0.8191 & \bf 0.8186 \\
 & 02 -- Ensemble (LSTM, Resnet ($w_1$+$c_5$), Resnet ($c_4$)) & 0.8191   &  0.8195 \\
 & 03 -- Ensemble (Spell, LSTM, Resnet ($w_1$+$c_5$), Resnet ($c_6$), CBOW) & 0.8173   &  0.8175 \\
 & 04 -- Ensemble (Spell, Resnet ($w_1$+$c_5$), Resnet ($c_6$), CBOW) & 0.8055   &  0.8051 \\
