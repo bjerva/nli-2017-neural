@@ -79,6 +79,9 @@ No systems used neural networks in the 2013 shared task \citep{nli2013},\footnot
 This constitutes one of our contributions to previous work.
 
 \section{External data}
+
+Since we participate both in the \textit{closed} and \textit{open} tracks, we here include an overview of the external data and models we have used in our \textit{open} submissions.
+
 \subsection{PoS-tagged sentences}
 We indirectly use the training data for the Stanford PoS tagger
 \citep{Manning2014corenlp}, and for initialising word embeddings we use
@@ -90,16 +93,21 @@ GloVe embeddings from 840 billion tokens of web data (obtained from
 
 \section{Systems}
 \subsection{Deep Residual Networks}
-\todo[inline]{Johannes, please describe this}
-
-Deep residual networks (resnets) are a class of convolutional neural networks, which consist of several convolutional blocks with skip connections in between \citep{He2016identity}.
+Deep residual networks, or \textit{resnets}, are a class of convolutional neural networks, which consist of several convolutional blocks with skip connections in between \citep{resnets:2015,He2016identity}.
 Such skip connections facilitate error propagation to earlier layers in the network, which allows for building deeper networks.
-We apply resnets with four residual blocks, each containing two successive one-dimensional convolutions.
+Although their primary application is image recognition and related tasks, recent work has found deep residual networks to be useful for a range of NLP tasks.
+Examples of this include morphological re-inflection \citep{robert:sigmorphon:2016}, language identification \citep{bjerva:2016:dsl}, semantic tagging \citep{bjerva:2016:semantic}, and other text classification tasks \citep{conneau:2016}.\todo{Too much self-citation?}
+
+We apply resnets with four residual blocks.
+Each residual block contains two successive one-dimensional convolutions, with a kernel size and stride of $2$.
 Each such block is followed by an average pooling layer and dropout ($p=0.5$, \citet{dropout}).
 The resnets are applied to several input representations: word unigrams, and character $4$- to $6$-grams.
-The outputs of each resnet are concatenated before passing through two fully connected layers.
+These input representations are first embedded into a $64$-dimensional space, and trained together with the task.
+We do not use any pre-trained embeddings for this sub-system.
+The outputs of each resnet are concatenated before passing through two fully connected layers, with $1024$ and $256$ hidden units respectively.
+We use the rectified linear unit (ReLU, \citet{rectifier}) activation function.
 We train the resnet over $50$ epochs with the Adam optimisation algorithm \citep{adam}, using the model with the lowest validation loss.
-In addition to dropout, we use weight decay for regularisation ($\epsilon=10^{-4}$).
+In addition to dropout, we use weight decay for regularisation ($\epsilon=10^{-4}$, \citet{weightdecay}).
 
 \subsection{PoS-tagged sentences}
 In order to easier capture general syntactic patterns, we use a sentence-level
