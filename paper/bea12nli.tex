@@ -89,7 +89,7 @@ This will help position your work within the context of the field and how your w
 \section{External data}
 \subsection{PoS-tagged sentences}
 We indirectly use the training data for the Stanford PoS tagger
-\citep{Manning2014corenlp}, and for initializing word embeddings we use
+\citep{Manning2014corenlp}, and for initialising word embeddings we use
 GloVe embeddings from 840 billion tokens of web data (obtained from
 \url{https://nlp.stanford.edu/projects/glove/}).
 
@@ -114,8 +114,8 @@ In order to easier capture general syntactic patterns, we use a sentence-level
 bidirectional LSTM over tokens and their corresponding part of speech tags
 from the Stanford CoreNLP toolkit \citep{Manning2014corenlp}.  PoS tags are
 represented by
-64-dimensional embeddings, initialized randomly;  word tokens by
-300-dimensional embeddings, initialized with GloVe \citep{Pennington2014glove}
+64-dimensional embeddings, initialised randomly;  word tokens by
+300-dimensional embeddings, initialised with GloVe \citep{Pennington2014glove}
 embeddings trained on 840 billion words of English web data from the Common
 Crawl project.\footnote{ Available at
 \url{https://nlp.stanford.edu/projects/glove/}}
