@@ -55,6 +55,8 @@
 \begin{abstract}
     We present the RUG-SU submission at the 2017 shared task on Native
     Language Inference.
+    We combine several approaches into an ensemble, based on spelling error features, a simple neural network using word representations, a deep residual network using word and character features, and a system based on a recurrent neural network.
+    Although our system is not the highest ranking one, we do outperform the baseline by far.
 \end{abstract}
 
 
@@ -62,29 +64,19 @@
 
 Native Language Identification (NLI) is the task of identifying the native language of, e.g., the writer of an English text.
 In this paper, we describe the University of Groningen / Stockholm University (RUG-SU) submission to the 2017 NLI shared task \citep{nli2017}.
-
 We combine several approaches into an ensemble, based on spelling error features, a simple neural network using word representations, a deep residual network using word and character features, and a system based on a recurrent neural network.
 
 \section{Related Work}
 
-In this section you can briefly describe other work in this area. We provide some ideas and relevant references below.
+NLI has been the subject of several shared tasks in recent years \citep{nli2013}.
+In recent years, NLI has also turned to including non-English language \citep{multilingual-nli}.
+For an overview, see \citet{malmasi2016}.
+Recently, speech transcripts and audio features have also been used \cite{compare2016}.
+Although these aspects are combined in the NLI 2017 shared task, with both written and spoken responses available, we only utilise the written responses in this work.
 
-You can start by describing what NLI is, and what the previous approaches are.
-You may cite other relevant papers if you do not wish to write a lengthy description.
-An extensive analysis is provided in the dissertation by \newcite{malmasi2016}.
-\\
-
-You can then refer to the previous essay-based shared task \cite{nli2013}. This was the first NLI shared task. You can then talk about recent trends in the field.
-
-All NLI shared tasks to date have been based on L2 English data, but NLI research has been extended to at least six other non-English languages \cite{multilingual-nli}.
-
-In addition to using the written responses, a recent trend has been the use of speech transcripts and audio features for dialect identification \cite{vardial2016}.
-The combination of transcripts and acoustic features has also provided good results for dialect identification \cite{vardial2017}.
-Following this trend, the 2016 Computational Paralinguistics Challenge \cite{compare2016} also included an NLI task based on the spoken response.
-The NLI 2017 shared task attempts to combine these approaches by including a written response (essay) and a spoken response (speech transcript and i-vector acoustic features) for each subject. The task also allows for the fusion of all features.
-
-You can also discuss how your system relates to other work in this area. For example, you can compare your approach to the previous state of the art NLI systems: \cite{malmasi:2017:nlisg}, \cite{ionescu:2014}, \cite{bykh:2014} and \cite{jarvis-bestgen-pepper:2013:BEA8}.
-This will help position your work within the context of the field and how your work relates to previous approaches, so it is important to do this.
+Previous approaches to NLI have used syntactic features \citep{bykh:2014}, string kernels \citep{ionescu:2014}, and variations of ensemble models \citep{malmasi:2017:nlisg,nli2013}.
+No systems used neural networks in the 2013 shared task \citep{nli2013},\footnote{This was, however, right before NLP was hit by the deep learning tsunami \citep{manning:2016}.} and to the best of our knowledge, this is the first work describing a neural approach to NLI.\footnote{We will change this statement, if other teams also use neural systems.}
+This constitutes one of our contributions to previous work.
 
 \section{External data}
 \subsection{PoS-tagged sentences}
