@@ -68,14 +68,14 @@ We combine several approaches into an ensemble, based on spelling error features
 
 \section{Related Work}
 
-NLI has been the subject of several shared tasks in recent years \citep{nli2013}.
-In recent years, NLI has also turned to including non-English language \citep{multilingual-nli}.
-For an overview, see \citet{malmasi2016}.
-Recently, speech transcripts and audio features have also been used \cite{compare2016}.
-Although these aspects are combined in the NLI 2017 shared task, with both written and spoken responses available, we only utilise the written responses in this work.
+NLI is an increasingly popular task, which has been the subject of several shared tasks in recent years \citep{nli2013,compare2016,nli2017}.
+Although earlier shared task editions have focussed on English, NLI has recently also turned to including non-English languages \citep{multilingual-nli}.
+Additionally, although the focus in the past has been on using written text, speech transcripts and audio features have also been included, for instance in the 2016 Computational Paralinguistics Challenge \citep{compare2016}.
+Although these aspects are combined in the NLI 2017 shared task, with both written and spoken responses available, we only utilise written responses in this work.
+For a further overview of NLI, we refer the reader to \citet{malmasi2016}.
 
 Previous approaches to NLI have used syntactic features \citep{bykh:2014}, string kernels \citep{ionescu:2014}, and variations of ensemble models \citep{malmasi:2017:nlisg,nli2013}.
-No systems used neural networks in the 2013 shared task \citep{nli2013},\footnote{This was, however, right before NLP was hit by the deep learning tsunami \citep{manning:2016}.} and to the best of our knowledge, this is the first work describing a neural approach to NLI.\footnote{We will change this statement, if other teams also use neural systems.}
+No systems used neural networks in the 2013 shared task \citep{nli2013},\footnote{This was, however, right before NLP was hit by the deep learning tsunami \citep{manning:2016}.} and to the best of our knowledge, ours is the first work describing a neural approach to this task.\footnote{We will change this statement, if other teams also use neural systems.}
 This constitutes one of our contributions to previous work.
 
 \section{External data}
