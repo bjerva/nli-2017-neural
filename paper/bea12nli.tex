@@ -90,7 +90,7 @@ This will help position your work within the context of the field and how your w
 \subsection{PoS-tagged sentences}
 We indirectly use the training data for the Stanford PoS tagger
 \citep{Manning2014corenlp}, and for initializing word embeddings we use
-GloVe embeddings from 840 billion tokens of web data (obtained from 
+GloVe embeddings from 840 billion tokens of web data (obtained from
 \url{https://nlp.stanford.edu/projects/glove/}).
 
 \subsection{Spelling features}
@@ -121,7 +121,7 @@ Crawl project.\footnote{ Available at
 \url{https://nlp.stanford.edu/projects/glove/}}
 
 To reduce overfitting, we perform training by choosing a random subset of 50\%
-of the sentenecs in an essay, concatenating their PoS tag and token
+of the sentences in an essay, concatenating their PoS tag and token
 embeddings, and running the resulting vector sequence through a bidirectional
 LSTM layer with 256 units per direction. We then average the final output
 vector of the LSTM over all the selected sentences from the essay, pass it
