@@ -155,19 +155,19 @@ The results for the open track are lower than those in the closed track (Table~\
 \midrule
 & Random Baseline & 0.0909 & 0.0909 \\
 \midrule
-\multirow{6}{*}{Closed Track} & 01 -- CNN ($w_1$+$c_5$) & 0.8016 & 0.8027 \\
-& 02 -- CNN ($w_1$+$c_5$) & 0.7776 & 0.7782 \\
-& 03 -- Ensemble (CNN ($w_1$+$c_5$), CNN ($c_4$)) & 0.7969 & 0.7964 \\
-& 04 -- Ensemble (CNN ($w_1$+$c_5$), CNN ($c_6$), CNN ($c_4$), CNN ($c_3$)) & 0.8023 & 0.8018 \\
-& 05 -- Ensemble (CNN ($w_1$+$c_5$), CNN ($c_6$), CNN ($c_4$), CBOW) & 0.8149 & 0.8145 \\
-& 06 -- Ensemble (CNN ($w_1$+$c_5$), CNN ($c_6$), MLP, CBOW) & \bf 0.8323 & \bf 0.8318 \\
+\multirow{6}{*}{Closed Track} & 01 -- Resnet ($w_1$+$c_5$) & 0.8016 & 0.8027 \\
+& 02 -- Resnet ($w_1$+$c_5$) & 0.7776 & 0.7782 \\
+& 03 -- Ensemble (Resnet ($w_1$+$c_5$), Resnet ($c_4$)) & 0.7969 & 0.7964 \\
+& 04 -- Ensemble (Resnet ($w_1$+$c_5$), Resnet ($c_6$), Resnet ($c_4$), Resnet ($c_3$)) & 0.8023 & 0.8018 \\
+& 05 -- Ensemble (Resnet ($w_1$+$c_5$), Resnet ($c_6$), Resnet ($c_4$), CBOW) & 0.8149 & 0.8145 \\
+& 06 -- Ensemble (Resnet ($w_1$+$c_5$), Resnet ($c_6$), MLP, CBOW) & \bf 0.8323 & \bf 0.8318 \\
 \midrule
-\multirow{6}{*}{Open Track} & 01 -- Ensemble (LSTM, CNN ($w_1$+$c_5$)) & \bf 0.8191 & \bf 0.8186 \\
-& 02 -- Ensemble (LSTM, CNN ($w_1$+$c_5$), CNN ($c_4$)) & 0.8191   &  0.8195 \\
-& 03 -- Ensemble (Spell, LSTM, CNN ($w_1$+$c_5$), CNN ($c_6$), CBOW) & 0.8173   &  0.8175 \\
-& 04 -- Ensemble (Spell, CNN ($w_1$+$c_5$), CNN ($c_6$), CBOW) & 0.8055   &  0.8051 \\
-& 05 -- Ensemble (Spell, Spell, CNN ($w_1$+$c_5$), CNN ($c_6$), CNN ($c_4$), CBOW) & 0.8045   &  0.8048 \\
-& 06 -- Ensemble (LSTM, CNN ($w_1$+$c_5$), CNN ($c_6$), CNN ($c_4$), CBOW)& 0.8009   &  0.8007 \\
+\multirow{6}{*}{Open Track} & 01 -- Ensemble (LSTM, Resnet ($w_1$+$c_5$)) & \bf 0.8191 & \bf 0.8186 \\
+& 02 -- Ensemble (LSTM, Resnet ($w_1$+$c_5$), Resnet ($c_4$)) & 0.8191   &  0.8195 \\
+& 03 -- Ensemble (Spell, LSTM, Resnet ($w_1$+$c_5$), Resnet ($c_6$), CBOW) & 0.8173   &  0.8175 \\
+& 04 -- Ensemble (Spell, Resnet ($w_1$+$c_5$), Resnet ($c_6$), CBOW) & 0.8055   &  0.8051 \\
+& 05 -- Ensemble (Spell, Spell, Resnet ($w_1$+$c_5$), Resnet ($c_6$), Resnet ($c_4$), CBOW) & 0.8045   &  0.8048 \\
+& 06 -- Ensemble (LSTM, Resnet ($w_1$+$c_5$), Resnet ($c_6$), Resnet ($c_4$), CBOW)& 0.8009   &  0.8007 \\
 \bottomrule
 \end{tabular}
 \end{table*}
@@ -183,14 +183,21 @@ The test data was evenly distributed across each class.
 \label{fig:1}
 \end{figure*}
 
-\section{Analysis}
-
-The ensemble seems to have overfit on the dev in most cases.
-
 
 \section{Discussion}
 
+In isolation, the ResNet system yields a relatively high F1 score of 80.16.
+This indicates that, although simpler methods yield better results for this task, deep neural networks are also applicable.
+However, further experimentation is needed before such a system can outperform the more traditional feature-based systems.
+This is in line with previous findings for the related task of language identification \citep{medvedeva:2017}.
+Combining all of our \textit{closed} systems yields an F1 score of 83.23, which makes this the $n_{th}$\footnote{update with real rank} system of this year's NLI shared task.
+
+In the \textit{open} track, the best performing systems are those including the spelling system predictions and/or the LSTM predictions.
+However, the highest F1 score obtained (81.91) is lower than our best score in the closed track.
+This can attributed to overfitting of the ensemble on the development data.
+
 \section{Conclusions}
+Although deep neural networks are able to perform this task, traditional methods still appear to be better.
 
 \section*{Acknowledgments}
 
