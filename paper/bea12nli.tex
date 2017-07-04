@@ -24,7 +24,7 @@
 
 
 \title{Option 1: Combining Old and New - Neural Networks and Spelling Features for Native Language Identification\\
-Option 2: Neural Networks and Spelling Features for Native Language Identification\\
+Option 2: Neural Networks and Spelling Features for Native Language Identification\\ %BP: like title option 2
 Option 3: The RUG-SU system at the NLI shared task\\}
 
 % Author information can be set in various styles:
@@ -164,8 +164,8 @@ We apply dropout ($p = 0.5$) on the final hidden layer.
 \subsection{Spelling features}
 \todo[inline]{Gintare, please describe this}
 
-\subsection{CBOW features}
-\todo[inline]{Barbara, please describe this}
+\subsection{CBOW features} 
+We complement the neural approaches with a simple neural network that uses word representations, namely a \textit{continous bag-of-words} (CBOW)  model~\cite{mikolov2013efficient}. It represents each essay simply as the average embedding of all words in the essay. The intuition is that this simple model provides complementary evidence to the models  that use sequential information. Our CBOW model was tuned on the \textsc{Dev} data and consists of an input layer of 512 input nodes, followed by a dropout layer (0.1) and a single softmax output layer. The model was trained for 20 epochs with Adam using a batch size of 50.
 
 \begin{figure*}[h]
 \centering
