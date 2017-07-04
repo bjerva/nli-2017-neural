@@ -92,11 +92,41 @@ GloVe embeddings from 840 billion tokens of web data (obtained from
 \todo[inline]{Gintare, please describe the data you used}
 
 \section{Systems}
+
+\begin{table*}[htbp]
+    \small
+\center
+\caption{Results for the essay task, in the closed and open tracks.}
+\label{tab:results}
+\begin{tabular}{llrr}
+\toprule
+\bf Track & \bf System & \bf F1 (macro) & \bf Accuracy \\
+\midrule
+& Random Baseline & 0.0909 & 0.0909 \\
+\midrule
+\multirow{6}{*}{Closed} & 01 -- Resnet ($w_1$+$c_5$) & 0.8016 & 0.8027 \\
+& 02 -- Resnet ($w_1$+$c_5$) & 0.7776 & 0.7782 \\
+& 03 -- Ensemble (Resnet ($w_1$+$c_5$), Resnet ($c_4$)) & 0.7969 & 0.7964 \\
+& 04 -- Ensemble (Resnet ($w_1$+$c_5$), Resnet ($c_6$), Resnet ($c_4$), Resnet ($c_3$)) & 0.8023 & 0.8018 \\
+& 05 -- Ensemble (Resnet ($w_1$+$c_5$), Resnet ($c_6$), Resnet ($c_4$), CBOW) & 0.8149 & 0.8145 \\
+& 06 -- Ensemble (Resnet ($w_1$+$c_5$), Resnet ($c_6$), MLP, CBOW) & \bf 0.8323 & \bf 0.8318 \\
+\midrule
+\multirow{6}{*}{Open} & 01 -- Ensemble (LSTM, Resnet ($w_1$+$c_5$)) & \bf 0.8191 & \bf 0.8186 \\
+& 02 -- Ensemble (LSTM, Resnet ($w_1$+$c_5$), Resnet ($c_4$)) & 0.8191   &  0.8195 \\
+& 03 -- Ensemble (Spell, LSTM, Resnet ($w_1$+$c_5$), Resnet ($c_6$), CBOW) & 0.8173   &  0.8175 \\
+& 04 -- Ensemble (Spell, Resnet ($w_1$+$c_5$), Resnet ($c_6$), CBOW) & 0.8055   &  0.8051 \\
+& 05 -- Ensemble (Spell, Spell, Resnet ($w_1$+$c_5$), Resnet ($c_6$), Resnet ($c_4$), CBOW) & 0.8045   &  0.8048 \\
+& 06 -- Ensemble (LSTM, Resnet ($w_1$+$c_5$), Resnet ($c_6$), Resnet ($c_4$), CBOW)& 0.8009   &  0.8007 \\
+\bottomrule
+\end{tabular}
+\end{table*}
 \subsection{Deep Residual Networks}
 Deep residual networks, or \textit{resnets}, are a class of convolutional neural networks, which consist of several convolutional blocks with skip connections in between \citep{resnets:2015,He2016identity}.
 Such skip connections facilitate error propagation to earlier layers in the network, which allows for building deeper networks.
 Although their primary application is image recognition and related tasks, recent work has found deep residual networks to be useful for a range of NLP tasks.
-Examples of this include morphological re-inflection \citep{robert:sigmorphon:2016}, language identification \citep{bjerva:2016:dsl}, semantic tagging \citep{bjerva:2016:semantic}, and other text classification tasks \citep{conneau:2016}.\todo{Too much self-citation?}
+Examples of this include morphological re-inflection \citep{robert:sigmorphon:2016},
+%language identification \citep{bjerva:2016:dsl},
+semantic tagging \citep{bjerva:2016:semantic}, and other text classification tasks \citep{conneau:2016}.
 
 We apply resnets with four residual blocks.
 Each residual block contains two successive one-dimensional convolutions, with a kernel size and stride of $2$.
@@ -135,53 +165,25 @@ We apply dropout ($p = 0.5$) on the final hidden layer.
 \subsection{CBOW features}
 \todo[inline]{Barbara, please describe this}
 
+\begin{figure*}[h]
+\centering
+\includegraphics[width=0.7\textwidth]{confusion_matrix_run06closed}
+\caption{Confusion matrix for our best run (closed track, run 06)}
+\label{fig:conf_mat}
+\end{figure*}
 \subsection{Ensemble}
 The systems are combined into an ensemble, consisting of a linear SVM.
 We use the probability distributions over the labels, as output by each system, as features for the SVM.
 The ensemble is trained and tuned on a random subset of the development set ($70/30$ split).
 For the selection of systems to include in the ensemble, we use the combination of systems resulting in the highest mean accuracy over five such random splits.
 
+
 \section{Results}
 The results for the open track are lower than those in the closed track (Table~\ref{tab:results}).
+Our best result in the closed track is an F1 score of $83.23$, and our best result in the open track is an F1 score of $81.91$.
 
-\begin{table*}[h]
-    \small
-\center
-\caption{Results for the essay task, in the closed and open tracks.}
-\label{tab:results}
-\begin{tabular}{llrr}
-\toprule
-\bf Track & \bf System & \bf F1 (macro) & \bf Accuracy \\
-\midrule
-& Random Baseline & 0.0909 & 0.0909 \\
-\midrule
-\multirow{6}{*}{Closed} & 01 -- Resnet ($w_1$+$c_5$) & 0.8016 & 0.8027 \\
-& 02 -- Resnet ($w_1$+$c_5$) & 0.7776 & 0.7782 \\
-& 03 -- Ensemble (Resnet ($w_1$+$c_5$), Resnet ($c_4$)) & 0.7969 & 0.7964 \\
-& 04 -- Ensemble (Resnet ($w_1$+$c_5$), Resnet ($c_6$), Resnet ($c_4$), Resnet ($c_3$)) & 0.8023 & 0.8018 \\
-& 05 -- Ensemble (Resnet ($w_1$+$c_5$), Resnet ($c_6$), Resnet ($c_4$), CBOW) & 0.8149 & 0.8145 \\
-& 06 -- Ensemble (Resnet ($w_1$+$c_5$), Resnet ($c_6$), MLP, CBOW) & \bf 0.8323 & \bf 0.8318 \\
-\midrule
-\multirow{6}{*}{Open} & 01 -- Ensemble (LSTM, Resnet ($w_1$+$c_5$)) & \bf 0.8191 & \bf 0.8186 \\
-& 02 -- Ensemble (LSTM, Resnet ($w_1$+$c_5$), Resnet ($c_4$)) & 0.8191   &  0.8195 \\
-& 03 -- Ensemble (Spell, LSTM, Resnet ($w_1$+$c_5$), Resnet ($c_6$), CBOW) & 0.8173   &  0.8175 \\
-& 04 -- Ensemble (Spell, Resnet ($w_1$+$c_5$), Resnet ($c_6$), CBOW) & 0.8055   &  0.8051 \\
-& 05 -- Ensemble (Spell, Spell, Resnet ($w_1$+$c_5$), Resnet ($c_6$), Resnet ($c_4$), CBOW) & 0.8045   &  0.8048 \\
-& 06 -- Ensemble (LSTM, Resnet ($w_1$+$c_5$), Resnet ($c_6$), Resnet ($c_4$), CBOW)& 0.8009   &  0.8007 \\
-\bottomrule
-\end{tabular}
-\end{table*}
-
-The official evaluation metric for the task is the F1 (macro) score.
-The test data was evenly distributed across each class.
-
-\begin{figure*}
-\centering
-\includegraphics[width=0.7\textwidth]{closed_confusion_run06.pdf}
-%TODO : add your own details to the caption for this figure
-\caption{ESSAY track, closed training, bjerva 06 (ADD YOUR OWN DETAILS HERE)}
-\label{fig:1}
-\end{figure*}
+Figure~\ref{fig:conf_mat} shows the confusion matrix of our best system's predictions (run 06).
+Most confusions occur in three groups: \textit{Hindi} and \textit{Telugu} (South Asian), \textit{Japanese} and \textit{Korean} (East Asian), and \textit{French}, \textit{Italian} and \textit{Spanish} (South European).
 
 
 \section{Discussion}
@@ -196,11 +198,17 @@ In the \textit{open} track, the best performing systems are those including the 
 However, the highest F1 score obtained (81.91) is lower than our best score in the closed track.
 This can attributed to overfitting of the ensemble on the development data.
 
+The main confusions of our system were within three groups.
+We suggest two reasons for this bias.
+On the one hand, the South European group also encompasses only romance languages, hence the confusion could be attributed to the learners making similar mistakes in the grammar.
+However, both the South Asian group and the East Asian group comprise languages which are not related to one another.
+Therefore, it is reasonable to assume that the confusion is also due to a cultural bias, such as South European learners using more vacation-related words, or South Asian learners using words related to India (in which both of the languages in question are spoken).
+
 \section{Conclusions}
+We describe our system for the NLI 2017 shared task, which is the first system to involve a neural approach to this task.
 Although deep neural networks are able to perform this task, traditional methods still appear to be better.
 
 \section*{Acknowledgments}
-
 We wish to thank Noam Chomsky for inventing syntax.
 
 \bibliography{bea12nli}
