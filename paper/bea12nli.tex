@@ -79,7 +79,7 @@ For a further overview of NLI, we refer the reader to \citet{malmasi2016}.
 
 Previous approaches to NLI have used syntactic features \citep{bykh:2014}, string kernels \citep{ionescu:2014}, and variations of ensemble models \citep{malmasi:2017:nlisg,nli2013}.
 No systems used neural networks in the 2013 shared task \citep{nli2013},\footnote{This was, however, right before NLP was hit by the deep learning tsunami \citep{manning:2016}.} and to the best of our knowledge, ours is the first work describing a neural approach to this task.\footnote{We will rephrase this, if other teams use neural systems.}
-This constitutes one of our contributions to previous work.
+This constitutes one of the contributions of this work. 
 
 \section{External data}
 
@@ -92,7 +92,7 @@ GloVe embeddings from 840 billion tokens of web data.\footnote{\url{https://nlp.
 
 \subsection{Spelling features}
 We investigate learner misspellings, which is mainly motivated by two assumptions.
-For one, spelling errors are quite prevalent in learners' written production.
+For one, spelling errors are quite prevalent in learners' written production~\cite{kochmar2011}.
 Additionally, spelling errors have been shown to be influenced by phonological L1 transfer \citep{grigonyte2014pronunciation}.
 We use the Aspell spell checker to detect misspelled words.\footnote{\url{http://aspell.net}}
 
@@ -185,7 +185,7 @@ These features are fed to a logistic regression classifier with builtin cross-va
 \end{figure*}
 
 \subsection{CBOW features}
-We complement the neural approaches with a simple neural network that uses word representations, namely a \textit{continuous bag-of-words} (CBOW)  model~\cite{mikolov2013efficient}. It represents each essay simply as the average embedding of all words in the essay. The intuition is that this simple model provides complementary evidence to the models  that use sequential information. Our CBOW model was tuned on the \textsc{Dev} data and consists of an input layer of 512 input nodes, followed by a dropout layer (0.1) and a single softmax output layer. The model was trained for 20 epochs with Adam using a batch size of 50.
+We complement the neural approaches with a simple neural network that uses word representations, namely a \textit{continuous bag-of-words} (CBOW)  model~\cite{mikolov2013efficient}. It represents each essay simply as the average embedding of all words in the essay. The intuition is that this simple model provides complementary evidence to the models  that use sequential information. Our CBOW model was tuned on the \textsc{Dev} data and consists of an input layer of 512 input nodes, followed by a dropout layer ($p=0.1$) and a single softmax output layer. The model was trained for 20 epochs with Adam using a batch size of 50. No pre-trained embeddings were used in this model.
 
 \subsection{Ensemble}
 The systems are combined into an ensemble, consisting of a linear SVM.
