@@ -64,7 +64,10 @@
 
 Native Language Identification (NLI) is the task of identifying the native language of, e.g., the writer of an English text.
 In this paper, we describe the University of Groningen / Stockholm University (RUG-SU) submission to the 2017 NLI shared task \citep{nli2017}.
-We combine several approaches into an ensemble, based on spelling error features, a simple neural network using word representations, a deep residual network using word and character features, and a system based on a recurrent neural network.
+Neural networks constitute one of the most popular methods in natural language processing these days, but appear not to have been previously used for NLI.
+Our goal in this paper is therefore twofold.
+On the one hand, we wish to investigate how well a neural system can perform the task.
+On the other hand, we wish to investigate the effect of using features based on spelling errors.
 
 \section{Related Work}
 
@@ -75,7 +78,7 @@ Although these aspects are combined in the NLI 2017 shared task, with both writt
 For a further overview of NLI, we refer the reader to \citet{malmasi2016}.
 
 Previous approaches to NLI have used syntactic features \citep{bykh:2014}, string kernels \citep{ionescu:2014}, and variations of ensemble models \citep{malmasi:2017:nlisg,nli2013}.
-No systems used neural networks in the 2013 shared task \citep{nli2013},\footnote{This was, however, right before NLP was hit by the deep learning tsunami \citep{manning:2016}.} and to the best of our knowledge, ours is the first work describing a neural approach to this task.\footnote{We will change this statement, if other teams also use neural systems.}
+No systems used neural networks in the 2013 shared task \citep{nli2013},\footnote{This was, however, right before NLP was hit by the deep learning tsunami \citep{manning:2016}.} and to the best of our knowledge, ours is the first work describing a neural approach to this task.\footnote{We will rephrase this, if other teams use neural systems.}
 This constitutes one of our contributions to previous work.
 
 \section{External data}
@@ -85,14 +88,13 @@ Since we participate both in the \textit{closed} and \textit{open} tracks, we he
 \subsection{PoS-tagged sentences}
 We indirectly use the training data for the Stanford PoS tagger
 \citep{Manning2014corenlp}, and for initialising word embeddings we use
-GloVe embeddings from 840 billion tokens of web data (obtained from
-\url{https://nlp.stanford.edu/projects/glove/}).
+GloVe embeddings from 840 billion tokens of web data.\footnote{\url{https://nlp.stanford.edu/projects/glove/}}
 
 \subsection{Spelling features}
 We investigate learner misspellings, which is mainly motivated by two assumptions.
 For one, spelling errors are quite prevalent in learners\' written production.
 Additionally, spelling errors have been shown to be influenced by phonological L1 transfer \citep{grigonyte2014pronunciation}.
-We use the Aspell spell checker to detect misspelled words.\footnote{Obtained from \url{http://aspell.net}}
+We use the Aspell spell checker to detect misspelled words.\footnote{\url{http://aspell.net}}
 
 \section{Systems}
 
@@ -150,8 +152,7 @@ represented by
 64-dimensional embeddings, initialised randomly;  word tokens by
 300-dimensional embeddings, initialised with GloVe \citep{Pennington2014glove}
 embeddings trained on 840 billion words of English web data from the Common
-Crawl project.\footnote{ Available at
-\url{https://nlp.stanford.edu/projects/glove/}}
+Crawl project.\footnote{\url{https://nlp.stanford.edu/projects/glove/}}
 
 To reduce overfitting, we perform training by choosing a random subset of 50\%
 of the sentences in an essay, concatenating their PoS tag and token
@@ -174,7 +175,7 @@ travellers travelers
 {(l,0),(ll,l0),(ole,l0e)}
 \end{verbatim}
 
-These features are fed to a logistic regression classifier with builtin cross-validation, as implemented in the scikit-learn library.\footnote{\url{http://scikit-learn.org/}}.
+These features are fed to a logistic regression classifier with builtin cross-validation, as implemented in the scikit-learn library.\footnote{\url{http://scikit-learn.org/}}
 
 \begin{figure*}[ht]
 \centering
