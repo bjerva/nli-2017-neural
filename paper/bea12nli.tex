@@ -185,7 +185,8 @@ These features are fed to a logistic regression classifier with builtin cross-va
 \end{figure*}
 
 \subsection{CBOW features}
-We complement the neural approaches with a simple neural network that uses word representations, namely a \textit{continuous bag-of-words} (CBOW)  model~\cite{mikolov2013efficient}. It represents each essay simply as the average embedding of all words in the essay. The intuition is that this simple model provides complementary evidence to the models  that use sequential information. Our CBOW model was tuned on the \textsc{Dev} data and consists of an input layer of 512 input nodes, followed by a dropout layer ($p=0.1$) and a single softmax output layer. The model was trained for 20 epochs with Adam using a batch size of 50. No pre-trained embeddings were used in this model.
+We complement the neural approaches with a simple neural network that uses word representations, namely a \textit{continuous bag-of-words} (CBOW)  model~\cite{mikolov2013efficient}. It represents each essay simply as the average embedding of all words in the essay. The intuition is that this simple model provides complementary evidence to the models  that use sequential information. Our CBOW model was tuned on the \textsc{Dev} data and consists of an input layer of 512 input nodes, followed by a dropout layer ($p=0.1$) and a single softmax output layer. The model was trained for 20 epochs with Adam using a batch size of 50. No pre-trained embeddings were used in this model. 
+We additionally experiment with a simple multiplayer perceptron (MLP). In contrast to CBOW it uses $n$-hot features (of the size of the vocabulary), a single layer with 512 nodes, sigmoid activation and dropout ($p=0.1$). The remaining training parameters are the same as for CBOW. We see that this model adds complementary knowledge in the closed-track ensemble (run 06).
 
 \subsection{Ensemble}
 The systems are combined into an ensemble, consisting of a linear SVM.
