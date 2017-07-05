@@ -43,8 +43,17 @@
 % If the title and author information does not fit in the area allocated,
 % place \setlength\titlebox{<new height>} right after
 % at the top, where <new height> can be something larger than 2.25in
-\author{Johannes Bjerva \and Gintar\.e Grigonyt\.e \and Robert {\"O}stling \and Barbara Plank \\
-{\tt j.bjerva@rug.nl\hfill{gintare,robert}@ling.su.se\hfill b.plank@rug.nl}}
+%\author{Johannes Bjerva$^1$ \and Gintar\.e Grigonyt\.e$^2$ \and Robert {\"O}stling$^2$ \and Barbara Plank$^1$ \\
+%{\tt j.bjerva@rug.nl\hfill{gintare,robert}@ling.su.se\hfill b.plank@rug.nl}\\
+%{University of Groningen$^1$\hspace{4cm}Stockholm University$^2$}}
+
+\author{Johannes Bjerva \\ CLCG \\ University of Groningen \\ {\tt j.bjerva@rug.nl}
+        \And Gintare Grigonyte \\ Department of Linguistics \\ Stockholm University \\ {\tt gintare@ling.su.se}
+        \AND Robert {\"O}stling \\ Department of Linguistics \\  Stockholm University \\ {\tt robert@ling.su.se}
+        \And Barbara Plank \\ CLCG \\ University of Groningen \\ {\tt b.plank@rug.nl}
+}
+        %}% } \And
+        % Author n \\ Address line \\ ... \\ Address line}
 
 \date{}
 
@@ -79,7 +88,7 @@ For a further overview of NLI, we refer the reader to \citet{malmasi2016}.
 
 Previous approaches to NLI have used syntactic features \citep{bykh:2014}, string kernels \citep{ionescu:2014}, and variations of ensemble models \citep{malmasi:2017:nlisg,nli2013}.
 No systems used neural networks in the 2013 shared task \citep{nli2013},\footnote{This was, however, right before NLP was hit by the deep learning tsunami \citep{manning:2016}.} and to the best of our knowledge, ours is the first work describing a neural approach to this task.\footnote{We will rephrase this, if other teams use neural systems.}
-This constitutes one of the contributions of this work. 
+This constitutes one of the contributions of this work.
 
 \section{External data}
 
@@ -185,7 +194,7 @@ These features are fed to a logistic regression classifier with builtin cross-va
 \end{figure*}
 
 \subsection{CBOW features}
-We complement the neural approaches with a simple neural network that uses word representations, namely a \textit{continuous bag-of-words} (CBOW)  model~\cite{mikolov2013efficient}. It represents each essay simply as the average embedding of all words in the essay. The intuition is that this simple model provides complementary evidence to the models  that use sequential information. Our CBOW model was tuned on the \textsc{Dev} data and consists of an input layer of 512 input nodes, followed by a dropout layer ($p=0.1$) and a single softmax output layer. The model was trained for 20 epochs with Adam using a batch size of 50. No pre-trained embeddings were used in this model. 
+We complement the neural approaches with a simple neural network that uses word representations, namely a \textit{continuous bag-of-words} (CBOW)  model~\cite{mikolov2013efficient}. It represents each essay simply as the average embedding of all words in the essay. The intuition is that this simple model provides complementary evidence to the models  that use sequential information. Our CBOW model was tuned on the \textsc{Dev} data and consists of an input layer of 512 input nodes, followed by a dropout layer ($p=0.1$) and a single softmax output layer. The model was trained for 20 epochs with Adam using a batch size of 50. No pre-trained embeddings were used in this model.
 We additionally experiment with a simple multiplayer perceptron (MLP). In contrast to CBOW it uses $n$-hot features (of the size of the vocabulary), a single layer with 512 nodes, sigmoid activation and dropout ($p=0.1$). The remaining training parameters are the same as for CBOW. We see that this model adds complementary knowledge in the closed-track ensemble (run 06).
 
 \subsection{Ensemble}
