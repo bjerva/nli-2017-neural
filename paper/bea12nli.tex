@@ -89,7 +89,8 @@ GloVe embeddings from 840 billion tokens of web data (obtained from
 \url{https://nlp.stanford.edu/projects/glove/}).
 
 \subsection{Spelling features}
-\todo[inline]{Gintare, please describe the data you used}
+The investigation of learner misspellings is mainly motivated by two assumptions: spelling errors are quite prevalent in learners\' written production and, spelling errors have been shown  to be influenced by a phonological L1 transfer (\citep{grigonyte2014pronunciation}) as a phonologically plausible spellings. 
+We are using a logistic regression classifier with builtin cross-validation as implemented in the scikit-learn library (\url{http://scikit-learn.org/}), and the Aspell spell checker (obtained from \url{http://aspell.net}) to detect misspelled words. 
 
 \section{Systems}
 
@@ -160,7 +161,15 @@ make the final predictions through a linear layer with softmax activations.
 We apply dropout ($p = 0.5$) on the final hidden layer.
 
 \subsection{Spelling features}
-\todo[inline]{Gintare, please describe this}
+Essays are checked with the Aspell spell checker for any misspelled words. If misspellings occur, we simply consider the first suggestion of the spell checker to be the most likely correction. 
+The features for NLI classification are derived entirely from misspelled words. We consider deletion, insertion, and replacement type of corrections. Features are represented as pairs of original and corrected character sequences (uni, bi, tri), for instance:
+
+\begin{verbatim}
+visiters visitors 
+{(e,o),(te,to),(ter,tor)} 
+travellers travelers 
+{(l,0),(ll,l0),(ole,l0e)}
+\end{verbatim}  
 
 \begin{figure*}[h]
 \centering
