@@ -164,15 +164,16 @@ We apply dropout ($p = 0.5$) on the final hidden layer.
 \subsection{Spelling features}
 \todo[inline]{Gintare, please describe this}
 
-\subsection{CBOW features} 
-We complement the neural approaches with a simple neural network that uses word representations, namely a \textit{continous bag-of-words} (CBOW)  model~\cite{mikolov2013efficient}. It represents each essay simply as the average embedding of all words in the essay. The intuition is that this simple model provides complementary evidence to the models  that use sequential information. Our CBOW model was tuned on the \textsc{Dev} data and consists of an input layer of 512 input nodes, followed by a dropout layer (0.1) and a single softmax output layer. The model was trained for 20 epochs with Adam using a batch size of 50.
-
 \begin{figure*}[h]
 \centering
 \includegraphics[width=0.7\textwidth]{confusion_matrix_run06closed}
 \caption{Confusion matrix for our best run (closed track, run 06)}
 \label{fig:conf_mat}
 \end{figure*}
+
+\subsection{CBOW features}
+We complement the neural approaches with a simple neural network that uses word representations, namely a \textit{continuous bag-of-words} (CBOW)  model~\cite{mikolov2013efficient}. It represents each essay simply as the average embedding of all words in the essay. The intuition is that this simple model provides complementary evidence to the models  that use sequential information. Our CBOW model was tuned on the \textsc{Dev} data and consists of an input layer of 512 input nodes, followed by a dropout layer (0.1) and a single softmax output layer. The model was trained for 20 epochs with Adam using a batch size of 50.
+
 \subsection{Ensemble}
 The systems are combined into an ensemble, consisting of a linear SVM.
 We use the probability distributions over the labels, as output by each system, as features for the SVM.
@@ -210,8 +211,8 @@ Therefore, it is reasonable to assume that the confusion is also due to a cultur
 We describe our system for the NLI 2017 shared task, which is the first system to involve a neural approach to this task.
 Although deep neural networks are able to perform this task, traditional methods still appear to be better.
 
-\section*{Acknowledgments}
-We wish to thank Noam Chomsky for inventing syntax.
+% \section*{Acknowledgments}
+% We wish to thank Noam Chomsky for inventing syntax.
 
 \bibliography{bea12nli}
 \bibliographystyle{emnlp_natbib}
