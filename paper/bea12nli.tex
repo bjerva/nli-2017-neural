@@ -62,17 +62,17 @@
 \maketitle
 
 \begin{abstract}
-    We present the RUG-SU submission at the 2017 shared task on Native
-    Language Identification.
+    We present the RUG-SU team's submission at the Native
+    Language Identification Shared Task 2017.
     We combine several approaches into an ensemble, based on spelling error features, a simple neural network using word representations, a deep residual network using word and character features, and a system based on a recurrent neural network.
-    Although our system is not the highest ranking one, we do outperform the baseline by far.
+    Although our system is not the highest ranking one, we do outperform the baseline by far, with our best performing ensemble consisting of several neural networks.
 \end{abstract}
 
 
 \section{Introduction}
 
 Native Language Identification (NLI) is the task of identifying the native language of, e.g., the writer of an English text.
-In this paper, we describe the University of Groningen / Stockholm University (RUG-SU) submission to the 2017 NLI shared task \citep{nli2017}.
+In this paper, we describe the University of Groningen / Stockholm University (team RUG-SU) submission to NLI Shared Task 2017 \citep{nli2017}.
 Neural networks constitute one of the most popular methods in natural language processing these days \citep{manning:2016}, but appear not to have been previously used for NLI.
 Our goal in this paper is therefore twofold.
 On the one hand, we wish to investigate how well a neural system can perform the task.
@@ -87,12 +87,9 @@ Although these aspects are combined in the NLI 2017 shared task, with both writt
 For a further overview of NLI, we refer the reader to \citet{malmasi2016}.
 
 Previous approaches to NLI have used syntactic features \citep{bykh:2014}, string kernels \citep{ionescu:2014}, and variations of ensemble models \citep{malmasi:2017:nlisg,nli2013}.
-No systems used neural networks in the 2013 shared task \citep{nli2013},\footnote{This was, however, right before NLP was hit by the deep learning tsunami \citep{manning:2016}.} and to the best of our knowledge, ours is the first work describing a neural approach to this task.\footnote{We will rephrase this, if other teams use neural systems.}
-This constitutes one of the contributions of this work.
+No systems used neural networks in the 2013 shared task \citep{nli2013}, hence ours is one of the first work describing a neural approach to this task, along with concurrent submissions in the NLI Shared Task 2017 \citep{nli2017}.
 
 \section{External data}
-
-Since we participate both in the \textit{closed} and \textit{open} tracks, we here include an overview of the external data and models we have used in our \textit{open} submissions.
 
 \subsection{PoS-tagged sentences}
 We indirectly use the training data for the Stanford PoS tagger
@@ -107,25 +104,27 @@ We use the Aspell spell checker to detect misspelled words.\footnote{\url{http:/
 
 \section{Systems}
 
+\setlength{\tabcolsep}{4.5pt}
 \begin{table*}[htbp]
     \small
-\center
-\caption{Results for the essay task, in the closed and open tracks.}
+\centering
+\caption{Official results for the essay task, with and without external resources (ext. res.).}
 \label{tab:results}
 \begin{tabular}{llrr}
 \toprule
-\bf Track & \bf System & \bf F1 (macro) & \bf Accuracy \\
+\bf Setting & \bf System & \bf F1 (macro) & \bf Accuracy \\
 \midrule
-& Random Baseline & 0.0909 & 0.0909 \\
+\multirow{2}{*}{Baselines}& Random Baseline & 0.0909 & 0.0909 \\
+& Official Baseline & 0.7100 & 0.7100 \\
 \midrule
-\multirow{6}{*}{Closed} & 01 -- Resnet ($w_1$+$c_5$) & 0.8016 & 0.8027 \\
+\multirow{6}{*}{No ext. res.} & 01 -- Resnet ($w_1$+$c_5$) & 0.8016 & 0.8027 \\
 & 02 -- Resnet ($w_1$+$c_5$) & 0.7776 & 0.7782 \\
 & 03 -- Ensemble (Resnet ($w_1$+$c_5$), Resnet ($c_4$)) & 0.7969 & 0.7964 \\
 & 04 -- Ensemble (Resnet ($w_1$+$c_5$), Resnet ($c_6$), Resnet ($c_4$), Resnet ($c_3$)) & 0.8023 & 0.8018 \\
 & 05 -- Ensemble (Resnet ($w_1$+$c_5$), Resnet ($c_6$), Resnet ($c_4$), CBOW) & 0.8149 & 0.8145 \\
 & 06 -- Ensemble (Resnet ($w_1$+$c_5$), Resnet ($c_6$), MLP, CBOW) & \bf 0.8323 & \bf 0.8318 \\
 \midrule
-\multirow{6}{*}{Open} & 01 -- Ensemble (LSTM, Resnet ($w_1$+$c_5$)) & \bf 0.8191 & \bf 0.8186 \\
+\multirow{6}{*}{With ext. res.} & 01 -- Ensemble (LSTM, Resnet ($w_1$+$c_5$)) & \bf 0.8191 & \bf 0.8186 \\
 & 02 -- Ensemble (LSTM, Resnet ($w_1$+$c_5$), Resnet ($c_4$)) & 0.8191   &  0.8195 \\
 & 03 -- Ensemble (Spell, LSTM, Resnet ($w_1$+$c_5$), Resnet ($c_6$), CBOW) & 0.8173   &  0.8175 \\
 & 04 -- Ensemble (Spell, Resnet ($w_1$+$c_5$), Resnet ($c_6$), CBOW) & 0.8055   &  0.8051 \\
@@ -194,19 +193,19 @@ These features are fed to a logistic regression classifier with builtin cross-va
 \end{figure*}
 
 \subsection{CBOW features}
-We complement the neural approaches with a simple neural network that uses word representations, namely a \textit{continuous bag-of-words} (CBOW)  model~\cite{mikolov2013efficient}. It represents each essay simply as the average embedding of all words in the essay. The intuition is that this simple model provides complementary evidence to the models  that use sequential information. Our CBOW model was tuned on the \textsc{Dev} data and consists of an input layer of 512 input nodes, followed by a dropout layer ($p=0.1$) and a single softmax output layer. The model was trained for 20 epochs with Adam using a batch size of 50. No pre-trained embeddings were used in this model.
+We complement the neural approaches with a simple neural network that uses word representations, namely a \textit{continuous bag-of-words} (CBOW) model~\cite{mikolov2013efficient}. It represents each essay simply as the average embedding of all words in the essay. The intuition is that this simple model provides complementary evidence to the models  that use sequential information. Our CBOW model was tuned on the \textsc{Dev} data and consists of an input layer of 512 input nodes, followed by a dropout layer ($p=0.1$) and a single softmax output layer. The model was trained for 20 epochs with Adam using a batch size of 50. No pre-trained embeddings were used in this model.
 We additionally experiment with a simple multiplayer perceptron (MLP). In contrast to CBOW it uses $n$-hot features (of the size of the vocabulary), a single layer with 512 nodes, sigmoid activation and dropout ($p=0.1$). The remaining training parameters are the same as for CBOW. We see that this model adds complementary knowledge in the closed-track ensemble (run 06).
 
 \subsection{Ensemble}
 The systems are combined into an ensemble, consisting of a linear SVM.
-We use the probability distributions over the labels, as output by each system, as features for the SVM.
+We use the probability distributions over the labels, as output by each system, as features for the SVM, as in meta-classification \citep{malmasi:2017:nlisg}.
 The ensemble is trained and tuned on a random subset of the development set ($70/30$ split).
 For the selection of systems to include in the ensemble, we use the combination of systems resulting in the highest mean accuracy over five such random splits.
 
 
 \section{Results}
-The results for the open track are lower than those in the closed track (Table~\ref{tab:results}).
-Our best result in the closed track is an F1 score of $83.23$, and our best result in the open track is an F1 score of $81.91$.
+The results when using external resources are lower than when not using them Table~\ref{tab:results}).
+Our best result without external resources is an F1 score of $83.23$, whereas we obtain F1 score of $81.91$ with such resources.
 
 Figure~\ref{fig:conf_mat} shows the confusion matrix of our best system's predictions (run 06).
 Most confusions occur in three groups: \textit{Hindi} and \textit{Telugu} (South Asian), \textit{Japanese} and \textit{Korean} (East Asian), and \textit{French}, \textit{Italian} and \textit{Spanish} (South European).
@@ -217,12 +216,13 @@ Most confusions occur in three groups: \textit{Hindi} and \textit{Telugu} (South
 In isolation, the ResNet system yields a relatively high F1 score of 80.16.
 This indicates that, although simpler methods yield better results for this task, deep neural networks are also applicable.
 However, further experimentation is needed before such a system can outperform the more traditional feature-based systems.
-This is in line with previous findings for the related task of language identification \citep{medvedeva:2017}.
-Combining all of our \textit{closed} systems yields an F1 score of 83.23, which makes this the $n_{th}$\footnote{update with real rank} system of this year's NLI shared task.
+This is in line with previous findings for the related task of language identification \citep{medvedeva:2017,vardial2017}.
+Combining all of our systems without external data yields an F1 score of 83.23, which makes this the $n_{th}$\todo{update with real rank} system of the NLI Shared Task 2017.
 
-In the \textit{open} track, the best performing systems are those including the spelling system predictions and/or the LSTM predictions.
-However, the highest F1 score obtained (81.91) is lower than our best score in the closed track.
+When adding external data, the best performing systems are those including the spelling system predictions and/or the LSTM predictions.
+However, the highest F1 score obtained (81.91) is lower than our best score without external resources.
 This can attributed to overfitting of the ensemble on the development data.
+It is nonetheless interesting that adding spelling features does boost performance within the external resources setting.
 
 The main confusions of our system were within three groups.
 We suggest two reasons for this bias.
@@ -231,11 +231,13 @@ However, both the South Asian group and the East Asian group comprise languages 
 Therefore, it is reasonable to assume that the confusion is also due to a cultural bias, such as South European learners using more vacation-related words, or South Asian learners using words related to India (in which both of the languages in question are spoken).
 
 \section{Conclusions}
-We describe our system for the NLI 2017 shared task, which is the first system to involve a neural approach to this task.
+We describe our system for the NLI Shared Task 2017, which is one the first system to involve a neural approach to this task.
 Although deep neural networks are able to perform this task, traditional methods still appear to be better.
 
-% \section*{Acknowledgments}
-% We wish to thank Noam Chomsky for inventing syntax.
+\section*{Acknowledgments}
+This work was partially funded by the NWO--VICI grant 'Lost in Translation – Found in Meaning' (288-89-003).
+\todo[inline]{Do we want to acknowledge anyone else?}
+
 
 \bibliography{bea12nli}
 \bibliographystyle{emnlp_natbib}
