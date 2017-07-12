@@ -83,7 +83,7 @@ On the other hand, we wish to investigate the effect of using features based on 
 NLI is an increasingly popular task, which has been the subject of several shared tasks in recent years \citep{nli2013,compare2016,nli2017}.
 Although earlier shared task editions have focussed on English, NLI has recently also turned to including non-English languages \citep{multilingual-nli}.
 Additionally, although the focus in the past has been on using written text, speech transcripts and audio features have also been included, for instance in the 2016 Computational Paralinguistics Challenge \citep{compare2016}.
-Although these aspects are combined in the NLI 2017 shared task, with both written and spoken responses available, we only utilise written responses in this work.
+Although these aspects are combined in the NLI Shared Task 2017, with both written and spoken responses available, we only utilise written responses in this work.
 For a further overview of NLI, we refer the reader to \citet{malmasi2016}.
 
 Previous approaches to NLI have used syntactic features \citep{bykh:2014}, string kernels \citep{ionescu:2014}, and variations of ensemble models \citep{malmasi:2017:nlisg,nli2013}.
@@ -204,10 +204,11 @@ For the selection of systems to include in the ensemble, we use the combination 
 
 
 \section{Results}
-The results when using external resources are lower than when not using them Table~\ref{tab:results}).
+The results when using external resources are lower than when not using them (Table~\ref{tab:results}).
 Our best result without external resources is an F1 score of $83.23$, whereas we obtain F1 score of $81.91$ with such resources.
 
-Figure~\ref{fig:conf_mat} shows the confusion matrix of our best system's predictions (run 06).
+Figure~\ref{fig:conf_mat} shows the confusion matrix of our best system's predictions (run 06).\todo[inline]{can we remove the bar on the right of the conf.plot? (the counts say it already all)}
+
 Most confusions occur in three groups: \textit{Hindi} and \textit{Telugu} (South Asian), \textit{Japanese} and \textit{Korean} (East Asian), and \textit{French}, \textit{Italian} and \textit{Spanish} (South European).
 
 
