@@ -6,7 +6,6 @@
 \usepackage{emnlp2017}
 \usepackage{times}
 \usepackage{latexsym}
-\usepackage{todonotes}
 \usepackage{graphicx}
 \usepackage{multirow}
 \usepackage{booktabs}
@@ -65,7 +64,7 @@
     We present the RUG-SU team's submission at the Native
     Language Identification Shared Task 2017.
     We combine several approaches into an ensemble, based on spelling error features, a simple neural network using word representations, a deep residual network using word and character features, and a system based on a recurrent neural network. Our best system is an ensemble of neural networks, reaching an F1 score of 0.8323.
-    Although our system is not the highest ranking one, we do outperform the baseline by far, with our best performing ensemble consisting of several neural networks.
+    Although our system is not the highest ranking one, we do outperform the baseline by far.
 \end{abstract}
 
 
@@ -187,7 +186,7 @@ These features are fed to a logistic regression classifier with builtin cross-va
 
 \begin{figure*}[ht]
 \centering
-\includegraphics[width=0.7\textwidth]{confusion_matrix_run06closed}
+\includegraphics[trim={8cm 0 0 0},clip,width=0.8\textwidth]{conf_matrix_run06closed}
 \caption{Confusion matrix for our best run (closed track, run 06)}
 \label{fig:conf_mat}
 \end{figure*}
@@ -206,9 +205,7 @@ For the selection of systems to include in the ensemble, we use the combination 
 \section{Results}
 The results when using external resources are lower than when not using them (Table~\ref{tab:results}).
 Our best result without external resources is an F1 score of $83.23$, whereas we obtain F1 score of $81.91$ with such resources.
-
-Figure~\ref{fig:conf_mat} shows the confusion matrix of our best system's predictions (run 06).\todo[inline]{can we remove the bar on the right of the conf.plot? (the counts say it already all)}
-
+Figure~\ref{fig:conf_mat} shows the confusion matrix of our best system's predictions (run 06).
 Most confusions occur in three groups: \textit{Hindi} and \textit{Telugu} (South Asian), \textit{Japanese} and \textit{Korean} (East Asian), and \textit{French}, \textit{Italian} and \textit{Spanish} (South European).
 
 
@@ -218,7 +215,7 @@ In isolation, the ResNet system yields a relatively high F1 score of 80.16.
 This indicates that, although simpler methods yield better results for this task, deep neural networks are also applicable.
 However, further experimentation is needed before such a system can outperform the more traditional feature-based systems.
 This is in line with previous findings for the related task of language identification \citep{medvedeva:2017,vardial2017}.
-Combining all of our systems without external data yields an F1 score of 83.23, which makes this the $n_{th}$\todo{update with real rank} system of the NLI Shared Task 2017.
+Combining all of our systems without external data yields an F1 score of 83.23, which places our system in the third best performing group of the NLI Shared Task 2017.
 
 When adding external data, the best performing systems are those including the spelling system predictions and/or the LSTM predictions.
 However, the highest F1 score obtained (81.91) is lower than our best score without external resources.
@@ -237,7 +234,6 @@ Although deep neural networks are able to perform this task, traditional methods
 
 \section*{Acknowledgments}
 This work was partially funded by the NWO--VICI grant 'Lost in Translation – Found in Meaning' (288-89-003).
-\todo[inline]{Do we want to acknowledge anyone else?}
 
 
 \bibliography{bea12nli}
